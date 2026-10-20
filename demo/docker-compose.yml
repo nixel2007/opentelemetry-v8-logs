@@ -1,0 +1,14 @@
+# Стек LGTM (Loki, Grafana, Tempo, Prometheus) с OpenTelemetry Collector в одном контейнере
+# для демонстрации и проверки. Для продуктивной эксплуатации используйте отдельные компоненты.
+#
+#   docker compose -f demo/docker-compose.yml up -d
+#
+# Grafana: http://localhost:3000 (admin/admin), OTLP: 4317 (gRPC), 4318 (HTTP).
+
+services:
+  lgtm:
+    image: grafana/otel-lgtm:0.30.0
+    ports:
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"

@@ -1,0 +1,32 @@
+{
+  "otel": {
+    "service": {
+      "name": "1c-cluster"
+    },
+    "exporter": {
+      "otlp": {
+        "endpoint": "http://localhost:4318",
+        "protocol": "http/json"
+      }
+    },
+    "traces": { "exporter": "otlp" },
+    "metrics": { "exporter": "otlp" },
+    "logs": { "exporter": "otlp" },
+    "onec-logs": {
+      "timezone": "Europe/Moscow",
+      "start-from-end": false,
+      "techlog": [
+        { "path": "/var/log/1c/techlog" }
+      ],
+      "eventlog": [
+        { "path": "/home/usr1cv8/.1cv8/1C/1cv8/reg_1541/00000000-0000-0000-0000-000000000000/1Cv8Log", "infobase": "erp" }
+      ]
+    }
+  },
+  "data": {
+    "ИсточникиДанных": {
+      "ТипКоннектора": "КоннекторSQLite",
+      "СтрокаСоединения": "Data Source=opentelemetry-onec-logs.db"
+    }
+  }
+}

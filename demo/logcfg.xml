@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Пример настройки технологического журнала для opentelemetry-onec-logs.
+  Файл кладется в каталог conf платформы. Для трасс нужны события вызовов (CALL, SCALL)
+  и свойство OSThread, по которому вложенные события связываются с вызовом.
+  format="json" (8.3.25+) тоже поддерживается.
+-->
+<config xmlns="http://v8.1c.ru/v8/tech-log">
+    <log location="/var/log/1c/techlog" history="24" format="text">
+        <event>
+            <eq property="name" value="CALL"/>
+        </event>
+        <event>
+            <eq property="name" value="SCALL"/>
+        </event>
+        <event>
+            <eq property="name" value="DBMSSQL"/>
+        </event>
+        <event>
+            <eq property="name" value="DBPOSTGRS"/>
+        </event>
+        <event>
+            <eq property="name" value="SDBL"/>
+        </event>
+        <event>
+            <eq property="name" value="EXCP"/>
+        </event>
+        <event>
+            <eq property="name" value="TLOCK"/>
+        </event>
+        <event>
+            <eq property="name" value="TDEADLOCK"/>
+        </event>
+        <event>
+            <eq property="name" value="TTIMEOUT"/>
+        </event>
+        <property name="all"/>
+    </log>
+</config>
