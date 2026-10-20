@@ -1,7 +1,11 @@
 {
   "otel": {
+    "enabled": true,
     "service": {
-      "name": "1c-cluster"
+      "name": "opentelemetry-onec-logs"
+    },
+    "entity": {
+      "enabled": false
     },
     "exporter": {
       "otlp": {
@@ -13,14 +17,26 @@
     "metrics": { "exporter": "otlp" },
     "logs": { "exporter": "otlp" },
     "onec-logs": {
+      "service": {
+        "name": "1c-cluster"
+      },
       "timezone": "Europe/Moscow",
       "start-from-end": false,
       "techlog": [
         { "path": "/var/log/1c/techlog" }
       ],
       "eventlog": [
-        { "path": "/home/usr1cv8/.1cv8/1C/1cv8/reg_1541/00000000-0000-0000-0000-000000000000/1Cv8Log", "infobase": "erp" }
+        { "path": "/home/usr1cv8/.1cv8/1C/1cv8/reg_1541/00000000-0000-0000-0000-000000000000/1Cv8Log", "infobase": "erp", "service-name": "erp" }
       ]
+    }
+  },
+  "logos": {
+    "logger": {
+      "rootLogger": { "level": "INFO", "appenders": ["otel", "console"] }
+    },
+    "appender": {
+      "otel": { "type": "ОтелАппендерLogos", "level": "INFO" },
+      "console": { "type": "ВыводЛогаВКонсоль", "level": "INFO" }
     }
   },
   "data": {

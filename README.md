@@ -35,7 +35,8 @@ opentelemetry-onec-logs
 ```
 
 Grafana будет доступна на http://localhost:3000: логи в Explore → Loki
-(`{service_name="1c-cluster"}`), трассы в Explore → Tempo, метрики `onec_techlog_event_duration_*`
+(`{service_name="1c-cluster"}` - технологический журнал, `{service_name="erp"}` - журнал регистрации,
+`{service_name="opentelemetry-onec-logs"}` - логи самого коллектора), трассы в Explore → Tempo, метрики `onec_techlog_event_duration_*`
 и `onec_eventlog_records_total` в Prometheus.
 
 Подробнее - в [документации](docs/product/010-index.md): [настройка](docs/product/020-configuration.md),

@@ -17,6 +17,7 @@
         .ИсполняемыйФайл("src/main.os", "opentelemetry-onec-logs")
         .ЗависитОт("autumn", "5.0.2")
         .ЗависитОт("autumn-data", "3.0.0")
+        .ЗависитОт("autumn-logos", "1.4.0")
         .ЗависитОт("autumn-opentelemetry", "2.0.0")
         .ЗависитОт("opentelemetry", "2.0.0")
         .РазработкаЗависитОт("oneunit", "0.5.2")

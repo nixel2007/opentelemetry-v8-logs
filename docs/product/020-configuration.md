@@ -6,24 +6,41 @@ title: Настройка
 
 Настройки читаются из `autumn-properties.json` в текущем каталоге (или в каталоге профиля пользователя).
 Секция `otel` - настройки [OpenTelemetry SDK](https://github.com/nixel2007/opentelemetry) и самого
-приложения (`otel.onec-logs`), секция `data` - база для позиций чтения.
+приложения (`otel.onec-logs`), секция `data` - база для позиций чтения, секция `logos` - логи коллектора.
+
+Телеметрия коллектора и данные журналов отправляются под разными `service.name`:
+
+- собственные логи и метрики коллектора - под `otel.service.name`, с атрибутами хоста и процесса коллектора;
+- данные журналов - под `otel.onec-logs.service.name` (или `service-name` источника), с атрибутами
+  из `otel.onec-logs.resource.attributes` и без атрибутов процесса коллектора.
 
 ```json
 {
   "otel": {
-    "service": { "name": "1c-cluster" },
+    "enabled": true,
+    "service": { "name": "opentelemetry-onec-logs" },
+    "entity": { "enabled": false },
     "exporter": { "otlp": { "endpoint": "http://localhost:4318", "protocol": "http/json" } },
     "traces": { "exporter": "otlp" },
     "metrics": { "exporter": "otlp" },
     "logs": { "exporter": "otlp" },
     "onec-logs": {
+      "service": { "name": "1c-cluster" },
+      "resource": { "attributes": "deployment.environment.name=prod" },
       "timezone": "Europe/Moscow",
       "techlog": [
         { "path": "/var/log/1c/techlog" }
       ],
       "eventlog": [
-        { "path": "/home/usr1cv8/.1cv8/1C/1cv8/reg_1541/<GUID базы>/1Cv8Log", "infobase": "erp" }
+        { "path": "/home/usr1cv8/.1cv8/1C/1cv8/reg_1541/<GUID базы>/1Cv8Log", "infobase": "erp", "service-name": "erp" }
       ]
+    }
+  },
+  "logos": {
+    "logger": { "rootLogger": { "level": "INFO", "appenders": ["otel", "console"] } },
+    "appender": {
+      "otel": { "type": "ОтелАппендерLogos", "level": "INFO" },
+      "console": { "type": "ВыводЛогаВКонсоль", "level": "INFO" }
     }
   },
   "data": {
@@ -35,12 +52,18 @@ title: Настройка
 }
 ```
 
+`otel.enabled` нужен только для отправки собственных логов коллектора через `ОтелАппендерLogos`
+(autumn-opentelemetry). Вместе с ним по умолчанию включается инструментирование autumn-data, и каждый
+запрос к базе позиций стал бы спаном - поэтому в примере `otel.entity.enabled` выключен.
+
 ## otel.onec-logs
 
 | Параметр | По умолчанию | Описание |
 |----------|--------------|----------|
-| `techlog` | - | Массив каталогов технологического журнала (`location` в `logcfg.xml`). Элемент: `path`, необязательные `timezone`, `start-from-end`. |
-| `eventlog` | - | Массив каталогов журнала регистрации (`1Cv8Log`). Элемент: `path`, `infobase` (имя базы; по умолчанию имя родительского каталога, то есть GUID базы), необязательные `timezone`, `start-from-end`. |
+| `service.name` | `1c` | `service.name` данных журналов. Должен отличаться от `otel.service.name` коллектора. |
+| `resource.attributes` | - | Атрибуты ресурса данных журналов в формате `OTEL_RESOURCE_ATTRIBUTES`: `ключ=значение` через запятую. `otel.resource.attributes` к данным не применяется. |
+| `techlog` | - | Массив каталогов технологического журнала (`location` в `logcfg.xml`). Элемент: `path`, необязательные `service-name`, `timezone`, `start-from-end`. |
+| `eventlog` | - | Массив каталогов журнала регистрации (`1Cv8Log`). Элемент: `path`, `infobase` (имя базы; по умолчанию имя родительского каталога, то есть GUID базы), необязательные `service-name`, `timezone`, `start-from-end`. |
 | `timezone` | часовой пояс машины | Часовой пояс серверов 1С. Журналы пишутся в местном времени сервера, в OpenTelemetry время передается в UTC. Принимаются имена IANA (`Europe/Moscow`), Windows и `GMT+03:00`. |
 | `start-from-end` | `false` | При первом запуске пропустить уже накопленные данные. Файлы, появившиеся позже, читаются с начала. |
 | `interval` | `5` | Пауза между проходами без новых данных, секунд. Пока журналы отстают, проходы идут без пауз. |
@@ -54,8 +77,9 @@ title: Настройка
 
 | Параметр | Описание |
 |----------|----------|
-| `otel.service.name` | Имя сервиса - метка `service_name` в Loki и Tempo. Удобно называть по кластеру 1С. |
-| `otel.resource.attributes` | Дополнительные атрибуты ресурса, например `deployment.environment.name=prod`. |
+| `otel.service.name` | Имя сервиса самого коллектора. |
+| `otel.resource.attributes` | Дополнительные атрибуты ресурса коллектора. |
+| `otel.metric.export.interval` | Интервал экспорта метрик, мс; действует и для метрик данных. Для метрик данных используются настройки транспорта OTLP коллектора, а временная агрегация всегда кумулятивная. |
 | `otel.exporter.otlp.endpoint` | Адрес приемника OTLP. |
 | `otel.exporter.otlp.protocol` | Протокол: рекомендуется `http/json`, см. раздел о производительности. |
 
