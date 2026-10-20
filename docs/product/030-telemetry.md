@@ -7,6 +7,25 @@ title: Состав телеметрии
 Время журналов 1С - местное время сервера, в OpenTelemetry оно передается в UTC
 по часовому поясу из настройки `otel.onec-logs.timezone`.
 
+## Ресурс
+
+Данные журналов отправляются с отдельным ресурсом, не с ресурсом коллектора:
+
+| Атрибут ресурса | Значение |
+|-----------------|----------|
+| `service.name` | `otel.onec-logs.service.name` или `service-name` источника |
+| `onec.infobase.name` | информационная база: для журнала регистрации - `infobase` источника; для технологического журнала - свойство события `p:processName`, а если оно пустое - `infobase` источника |
+| атрибуты из `otel.onec-logs.resource.attributes` | как заданы |
+
+Loki делает индексируемыми метками только атрибуты ресурса из своего списка (`service.name`
+и другие, см. [документацию Loki](https://grafana.com/docs/loki/latest/send-data/otel/)), остальные
+сохраняются как структурированные метаданные. Чтобы база стала меткой `onec_infobase_name`,
+добавьте `onec.infobase.name` в `limits_config.otlp_config` Loki - пример в `demo/loki-config.yaml`.
+
+В технологическом журнале `p:processName` бывает и не базой: в журнале файловой базы на macOS
+(8.3.27) у событий отладчика оно равно `RemoteDebugger` и `DebugControlCenter`, и эти значения
+тоже попадают в `onec.infobase.name`.
+
 ## Технологический журнал
 
 ### Логи
@@ -22,7 +41,6 @@ title: Состав телеметрии
 | `onec.techlog.duration` | длительность, мкс |
 | `onec.techlog.depth` | уровень вложенности |
 | `onec.techlog.<свойство>` | свойства события как есть: `onec.techlog.Usr`, `onec.techlog.t:clientID`, `onec.techlog.Sql`...; повторяющиеся свойства - массивом |
-| `onec.infobase.name` | имя базы из свойства `p:processName` |
 | `process.executable.name`, `process.pid` | процесс и PID из имени каталога или файла |
 | `log.file.path` | путь к файлу журнала |
 
@@ -80,7 +98,6 @@ title: Состав телеметрии
 | Тело | комментарий; если он пуст - идентификатор события |
 | Серьезность | `E` - `ERROR`, `W` - `WARN`, `I` - `INFO`, `N` (примечание) - `DEBUG` |
 | `onec.eventlog.event` | идентификатор события (`_$Session$_.Start`, `_$Data$_.Post`...) |
-| `onec.infobase.name` | имя базы из настройки `infobase` |
 | `user.name`, `user.id` | имя и идентификатор пользователя |
 | `onec.eventlog.computer`, `onec.eventlog.application` | компьютер и приложение |
 | `onec.eventlog.connection`, `onec.eventlog.session` | соединение и сеанс |

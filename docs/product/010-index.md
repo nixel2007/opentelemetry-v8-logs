@@ -50,6 +50,7 @@ opentelemetry-onec-logs --once   # один проход, например из 
 В каталоге `demo` репозитория:
 
 - `docker-compose.yml` - стек LGTM в одном контейнере (`grafana/otel-lgtm`);
+- `loki-config.yaml` - конфигурация Loki, в которой база (`onec.infobase.name`) - индексируемая метка;
 - `autumn-properties.json` - пример настроек приложения;
 - `logcfg.xml` - пример настройки технологического журнала с событиями для трасс.
 

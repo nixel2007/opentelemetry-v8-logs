@@ -4,6 +4,7 @@
 #   docker compose -f demo/docker-compose.yml up -d
 #
 # Grafana: http://localhost:3000 (admin/admin), OTLP: 4317 (gRPC), 4318 (HTTP).
+# Конфигурация Loki заменена на loki-config.yaml: база (onec.infobase.name) - индексируемая метка.
 
 services:
   lgtm:
@@ -12,3 +13,5 @@ services:
       - "3000:3000"
       - "4317:4317"
       - "4318:4318"
+    volumes:
+      - ./loki-config.yaml:/otel-lgtm/loki-config.yaml:ro

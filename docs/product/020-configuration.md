@@ -62,7 +62,7 @@ title: Настройка
 |----------|--------------|----------|
 | `service.name` | `1c` | `service.name` данных журналов. Должен отличаться от `otel.service.name` коллектора. |
 | `resource.attributes` | - | Атрибуты ресурса данных журналов в формате `OTEL_RESOURCE_ATTRIBUTES`: `ключ=значение` через запятую. `otel.resource.attributes` к данным не применяется. |
-| `techlog` | - | Массив каталогов технологического журнала (`location` в `logcfg.xml`). Элемент: `path`, необязательные `service-name`, `timezone`, `start-from-end`. |
+| `techlog` | - | Массив каталогов технологического журнала (`location` в `logcfg.xml`). Элемент: `path`, необязательные `service-name`, `infobase` (база для событий с пустым `p:processName`, например у файловой базы), `timezone`, `start-from-end`. |
 | `eventlog` | - | Массив каталогов журнала регистрации (`1Cv8Log`). Элемент: `path`, `infobase` (имя базы; по умолчанию имя родительского каталога, то есть GUID базы), необязательные `service-name`, `timezone`, `start-from-end`. |
 | `timezone` | часовой пояс машины | Часовой пояс серверов 1С. Журналы пишутся в местном времени сервера, в OpenTelemetry время передается в UTC. Принимаются имена IANA (`Europe/Moscow`), Windows и `GMT+03:00`. |
 | `start-from-end` | `false` | При первом запуске пропустить уже накопленные данные. Файлы, появившиеся позже, читаются с начала. |
