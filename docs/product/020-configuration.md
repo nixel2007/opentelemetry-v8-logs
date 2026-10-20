@@ -95,5 +95,6 @@ title: Настройка
 ## Настройка технологического журнала
 
 Для трасс в ТЖ нужны события вызовов (`CALL`) и вложенные события (`DBMSSQL`,
-`DBPOSTGRS`, `SDBL`, `TLOCK`, `EXCP`...) со свойствами `OSThread` и `t:clientID`.
-Пример - `demo/logcfg.xml`.
+`DBPOSTGRS`, `SDBL`, `TLOCK`, `EXCP`...) со свойствами `OSThread`, `t:clientID` и `Context`
+(в файловой базе код пользователя пишется без `CALL` и `t:clientID`, трассы строятся по `Context`,
+см. [состав телеметрии](030-telemetry.md)). Пример - `demo/logcfg.xml`.
