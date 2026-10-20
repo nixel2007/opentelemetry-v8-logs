@@ -5,7 +5,7 @@ title: Состав телеметрии
 # Состав телеметрии
 
 Время журналов 1С - местное время сервера, в OpenTelemetry оно передается в UTC
-по часовому поясу из настройки `otel.onec-logs.timezone`.
+по часовому поясу из настройки `otel.v8-logs.timezone`.
 
 ## Ресурс
 
@@ -13,34 +13,34 @@ title: Состав телеметрии
 
 | Атрибут ресурса | Значение |
 |-----------------|----------|
-| `service.name` | `otel.onec-logs.service.name` или `service-name` источника |
-| `onec.infobase.name` | информационная база: для журнала регистрации - `infobase` источника; для технологического журнала - свойство события `p:processName`, а если оно пустое - `infobase` источника |
-| атрибуты из `otel.onec-logs.resource.attributes` | как заданы |
+| `service.name` | `otel.v8-logs.service.name` или `service-name` источника |
+| `v8.infobase.name` | информационная база: для журнала регистрации - `infobase` источника; для технологического журнала - свойство события `p:processName`, а если оно пустое - `infobase` источника |
+| атрибуты из `otel.v8-logs.resource.attributes` | как заданы |
 
 Loki делает индексируемыми метками только атрибуты ресурса из своего списка (`service.name`
 и другие, см. [документацию Loki](https://grafana.com/docs/loki/latest/send-data/otel/)), остальные
-сохраняются как структурированные метаданные. Чтобы база стала меткой `onec_infobase_name`,
-добавьте `onec.infobase.name` в `limits_config.otlp_config` Loki - пример в `demo/loki-config.yaml`.
+сохраняются как структурированные метаданные. Чтобы база стала меткой `v8_infobase_name`,
+добавьте `v8.infobase.name` в `limits_config.otlp_config` Loki - пример в `demo/loki-config.yaml`.
 
 В технологическом журнале `p:processName` бывает и не базой: в журнале файловой базы на macOS
 (8.3.27) у событий отладчика оно равно `RemoteDebugger` и `DebugControlCenter`, и эти значения
-тоже попадают в `onec.infobase.name`.
+тоже попадают в `v8.infobase.name`.
 
 ## Технологический журнал
 
 ### Логи
 
-Каждое событие - запись лога (область инструментирования `opentelemetry-onec-logs.techlog`).
+Каждое событие - запись лога (область инструментирования `opentelemetry-v8-logs.techlog`).
 
 | Поле | Значение |
 |------|----------|
 | Время | время окончания события |
 | Тело | исходный текст события |
 | Серьезность | `ERROR` для `EXCP`; `WARN` для `ATTN`, `TDEADLOCK`, `TTIMEOUT`; иначе `INFO` |
-| `onec.techlog.event.name` | имя события (`CALL`, `DBMSSQL`...) |
-| `onec.techlog.duration` | длительность, мкс |
-| `onec.techlog.depth` | уровень вложенности |
-| `onec.techlog.<свойство>` | свойства события как есть: `onec.techlog.Usr`, `onec.techlog.t:clientID`, `onec.techlog.Sql`...; повторяющиеся свойства - массивом |
+| `v8.techlog.event.name` | имя события (`CALL`, `DBMSSQL`...) |
+| `v8.techlog.duration` | длительность, мкс |
+| `v8.techlog.depth` | уровень вложенности |
+| `v8.techlog.<свойство>` | свойства события как есть: `v8.techlog.Usr`, `v8.techlog.t:clientID`, `v8.techlog.Sql`...; повторяющиеся свойства - массивом |
 | `process.executable.name`, `process.pid` | процесс и PID из имени каталога или файла |
 | `log.file.path` | путь к файлу журнала |
 
@@ -48,13 +48,13 @@ Loki делает индексируемыми метками только ат�
 
 | Метрика | Тип | Атрибуты |
 |---------|-----|----------|
-| `onec.techlog.event.duration`, с | гистограмма | `onec.techlog.event.name`, `process.executable.name`, `onec.infobase.name` |
+| `v8.techlog.event.duration`, с | гистограмма | `v8.techlog.event.name`, `process.executable.name`, `v8.infobase.name` |
 
 ### Трассы
 
 Спан каждого события отправляется сразу при чтении, события в памяти не копятся.
 
-Корень трассы - событие вызова (`CALL`, настройка `otel.onec-logs.traces.root-events`).
+Корень трассы - событие вызова (`CALL`, настройка `otel.v8-logs.traces.root-events`).
 Трасса строится по потоку выполнения: процесс, `OSThread` и `t:clientID`. События без `t:clientID`
 спанами не становятся: так сборщик не привязывает к вызову события потока, не относящиеся к клиенту.
 
@@ -65,7 +65,7 @@ Loki делает индексируемыми метками только ат�
 Сборщик исходит из того, что события одного уровня в одном потоке по времени не пересекаются,
 и тогда охват означает, что событие - предок; на реальных журналах это пока не проверено. Если уровень не пишется
 в журнал или следующее событие этого уровня не охватывает потомков, слот отправляется синтетическим
-спаном `UNLOGGED` с атрибутом `onec.techlog.synthetic` на интервале потомков. Вызов закрывает трассу
+спаном `UNLOGGED` с атрибутом `v8.techlog.synthetic` на интервале потомков. Вызов закрывает трассу
 потока. Трасса потока, в котором больше часа не было событий, закрывается синтетическим корнем.
 
 | Событие | Спан |
@@ -89,7 +89,7 @@ Loki делает индексируемыми метками только ат�
 
 ### Логи
 
-Каждая запись - запись лога (область инструментирования `opentelemetry-onec-logs.eventlog`).
+Каждая запись - запись лога (область инструментирования `opentelemetry-v8-logs.eventlog`).
 Пустые поля не передаются.
 
 | Поле | Значение |
@@ -97,21 +97,21 @@ Loki делает индексируемыми метками только ат�
 | Время | время записи |
 | Тело | комментарий; если он пуст - идентификатор события |
 | Серьезность | `E` - `ERROR`, `W` - `WARN`, `I` - `INFO`, `N` (примечание) - `DEBUG` |
-| `onec.eventlog.event` | идентификатор события (`_$Session$_.Start`, `_$Data$_.Post`...) |
+| `v8.eventlog.event` | идентификатор события (`_$Session$_.Start`, `_$Data$_.Post`...) |
 | `user.name`, `user.id` | имя и идентификатор пользователя |
-| `onec.eventlog.computer`, `onec.eventlog.application` | компьютер и приложение |
-| `onec.eventlog.connection`, `onec.eventlog.session` | соединение и сеанс |
-| `onec.eventlog.transaction.status` | `committed` (код `C`), `rolled_back` (код `R`): в журналах с этими кодами записаны события `_$Transaction$_.Commit` и `Rollback` |
-| `onec.eventlog.transaction.status_code` | код статуса транзакции как есть: `C`, `R`, `U` (у изменений данных внутри транзакции; значение не расшифровывается) |
-| `onec.eventlog.transaction.id` | номер транзакции |
-| `onec.eventlog.metadata`, `onec.eventlog.metadata.uuid` | объект метаданных |
-| `onec.eventlog.data`, `onec.eventlog.data.presentation` | данные и их представление |
-| `onec.eventlog.server`, `onec.eventlog.port`, `onec.eventlog.sync_port` | рабочий сервер и порты |
-| `onec.eventlog.data_separation.<разделитель>` | значения разделителей сеанса |
+| `v8.eventlog.computer`, `v8.eventlog.application` | компьютер и приложение |
+| `v8.eventlog.connection`, `v8.eventlog.session` | соединение и сеанс |
+| `v8.eventlog.transaction.status` | `committed` (код `C`), `rolled_back` (код `R`): в журналах с этими кодами записаны события `_$Transaction$_.Commit` и `Rollback` |
+| `v8.eventlog.transaction.status_code` | код статуса транзакции как есть: `C`, `R`, `U` (у изменений данных внутри транзакции; значение не расшифровывается) |
+| `v8.eventlog.transaction.id` | номер транзакции |
+| `v8.eventlog.metadata`, `v8.eventlog.metadata.uuid` | объект метаданных |
+| `v8.eventlog.data`, `v8.eventlog.data.presentation` | данные и их представление |
+| `v8.eventlog.server`, `v8.eventlog.port`, `v8.eventlog.sync_port` | рабочий сервер и порты |
+| `v8.eventlog.data_separation.<разделитель>` | значения разделителей сеанса |
 | `log.file.path` | путь к файлу журнала |
 
 ### Метрики
 
 | Метрика | Тип | Атрибуты |
 |---------|-----|----------|
-| `onec.eventlog.records` | счетчик | `onec.eventlog.event`, `onec.eventlog.severity`, `onec.infobase.name`, `onec.eventlog.application` |
+| `v8.eventlog.records` | счетчик | `v8.eventlog.event`, `v8.eventlog.severity`, `v8.infobase.name`, `v8.eventlog.application` |

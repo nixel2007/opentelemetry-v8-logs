@@ -1,7 +1,7 @@
 # Конфигурация Loki для демонстрации: конфигурация образа grafana/otel-lgtm 0.30.0
 # (https://github.com/grafana/docker-otel-lgtm/blob/v0.30.0/docker/loki-config.yaml, Apache License 2.0)
-# с добавленным limits_config.otlp_config: атрибут ресурса onec.infobase.name становится
-# индексируемой меткой onec_infobase_name в дополнение к меткам Loki по умолчанию (service_name и др.).
+# с добавленным limits_config.otlp_config: атрибут ресурса v8.infobase.name становится
+# индексируемой меткой v8_infobase_name в дополнение к меткам Loki по умолчанию (service_name и др.).
 
 auth_enabled: false
 
@@ -36,7 +36,7 @@ limits_config:
       attributes_config:
         - action: index_label
           attributes:
-            - onec.infobase.name
+            - v8.infobase.name
 
 ruler:
   alertmanager_url: http://127.0.0.1:9093

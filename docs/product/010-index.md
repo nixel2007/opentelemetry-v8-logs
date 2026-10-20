@@ -2,7 +2,7 @@
 title: Экспорт журналов 1С в OpenTelemetry
 ---
 
-# opentelemetry-onec-logs
+# opentelemetry-v8-logs
 
 Приложение читает технологический журнал (ТЖ) и журнал регистрации (ЖР) 1С:Предприятия
 и передает их в OpenTelemetry по OTLP. Получатель - любой бэкенд с поддержкой OTLP,
@@ -37,9 +37,9 @@ title: Экспорт журналов 1С в OpenTelemetry
 ## Установка и запуск
 
 ```sh
-opm install opentelemetry-onec-logs
-opentelemetry-onec-logs          # постоянная работа
-opentelemetry-onec-logs --once   # один проход, например из планировщика
+opm install opentelemetry-v8-logs
+opentelemetry-v8-logs          # постоянная работа
+opentelemetry-v8-logs --once   # один проход, например из планировщика
 ```
 
 Приложение запускается на сервере 1С (или там, где доступны каталоги журналов) и берет настройки
@@ -50,14 +50,14 @@ opentelemetry-onec-logs --once   # один проход, например из 
 В каталоге `demo` репозитория:
 
 - `docker-compose.yml` - стек LGTM в одном контейнере (`grafana/otel-lgtm`);
-- `loki-config.yaml` - конфигурация Loki, в которой база (`onec.infobase.name`) - индексируемая метка;
+- `loki-config.yaml` - конфигурация Loki, в которой база (`v8.infobase.name`) - индексируемая метка;
 - `autumn-properties.json` - пример настроек приложения;
 - `logcfg.xml` - пример настройки технологического журнала с событиями для трасс.
 
 ```sh
 docker compose -f demo/docker-compose.yml up -d
 cp demo/autumn-properties.json .   # укажите свои каталоги журналов
-opentelemetry-onec-logs
+opentelemetry-v8-logs
 ```
 
 Grafana: http://localhost:3000.

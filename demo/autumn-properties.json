@@ -2,7 +2,7 @@
   "otel": {
     "enabled": true,
     "service": {
-      "name": "opentelemetry-onec-logs"
+      "name": "opentelemetry-v8-logs"
     },
     "entity": {
       "enabled": false
@@ -16,7 +16,7 @@
     "traces": { "exporter": "otlp" },
     "metrics": { "exporter": "otlp" },
     "logs": { "exporter": "otlp" },
-    "onec-logs": {
+    "v8-logs": {
       "service": {
         "name": "1c-cluster"
       },
@@ -42,7 +42,7 @@
   "data": {
     "ИсточникиДанных": {
       "ТипКоннектора": "КоннекторSQLite",
-      "СтрокаСоединения": "Data Source=opentelemetry-onec-logs.db"
+      "СтрокаСоединения": "Data Source=opentelemetry-v8-logs.db"
     }
   }
 }

@@ -3,18 +3,18 @@
 // Полную документацию см. на hub.oscript.io/packaging
 //
 
-Описание.Имя("opentelemetry-onec-logs")
+Описание.Имя("opentelemetry-v8-logs")
         .Версия("0.1.0")
         .Автор("Nikita Fedkin")
         .АдресАвтора("nixel2007@gmail.com")
-        .АдресРепозитория("https://github.com/nixel2007/opentelemetry-onec-logs")
+        .АдресРепозитория("https://github.com/nixel2007/opentelemetry-v8-logs")
         .Описание("Экспорт технологического журнала и журнала регистрации 1С:Предприятия в OpenTelemetry (OTLP)")
         .ВерсияСреды("2.2.1")
         .ВключитьФайл("src")
         .ВключитьФайл("lib.config")
         .ВключитьФайл("docs")
         .ВключитьФайл("README.md")
-        .ИсполняемыйФайл("src/main.os", "opentelemetry-onec-logs")
+        .ИсполняемыйФайл("src/main.os", "opentelemetry-v8-logs")
         .ЗависитОт("autumn", "5.0.2")
         .ЗависитОт("autumn-data", "3.0.0")
         .ЗависитОт("autumn-logos", "1.4.0")

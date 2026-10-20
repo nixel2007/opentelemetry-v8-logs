@@ -10,6 +10,6 @@ jobs:
   release:
     uses: autumn-library/workflows/.github/workflows/release.yml@v1
     with:
-      package_mask: "opentelemetry-onec-logs-*.ospx"
+      package_mask: "opentelemetry-v8-logs-*.ospx"
     secrets:
       PUSH_TOKEN: ${{ secrets.PUSH_TOKEN }}

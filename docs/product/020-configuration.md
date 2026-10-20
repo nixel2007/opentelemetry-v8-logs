@@ -6,25 +6,25 @@ title: Настройка
 
 Настройки читаются из `autumn-properties.json` в текущем каталоге (или в каталоге профиля пользователя).
 Секция `otel` - настройки [OpenTelemetry SDK](https://github.com/nixel2007/opentelemetry) и самого
-приложения (`otel.onec-logs`), секция `data` - база для позиций чтения, секция `logos` - логи коллектора.
+приложения (`otel.v8-logs`), секция `data` - база для позиций чтения, секция `logos` - логи коллектора.
 
 Телеметрия коллектора и данные журналов отправляются под разными `service.name`:
 
 - собственные логи и метрики коллектора - под `otel.service.name`, с атрибутами хоста и процесса коллектора;
-- данные журналов - под `otel.onec-logs.service.name` (или `service-name` источника), с атрибутами
-  из `otel.onec-logs.resource.attributes` и без атрибутов процесса коллектора.
+- данные журналов - под `otel.v8-logs.service.name` (или `service-name` источника), с атрибутами
+  из `otel.v8-logs.resource.attributes` и без атрибутов процесса коллектора.
 
 ```json
 {
   "otel": {
     "enabled": true,
-    "service": { "name": "opentelemetry-onec-logs" },
+    "service": { "name": "opentelemetry-v8-logs" },
     "entity": { "enabled": false },
     "exporter": { "otlp": { "endpoint": "http://localhost:4318", "protocol": "http/json" } },
     "traces": { "exporter": "otlp" },
     "metrics": { "exporter": "otlp" },
     "logs": { "exporter": "otlp" },
-    "onec-logs": {
+    "v8-logs": {
       "service": { "name": "1c-cluster" },
       "resource": { "attributes": "deployment.environment.name=prod" },
       "timezone": "Europe/Moscow",
@@ -46,7 +46,7 @@ title: Настройка
   "data": {
     "ИсточникиДанных": {
       "ТипКоннектора": "КоннекторSQLite",
-      "СтрокаСоединения": "Data Source=opentelemetry-onec-logs.db"
+      "СтрокаСоединения": "Data Source=opentelemetry-v8-logs.db"
     }
   }
 }
@@ -56,7 +56,7 @@ title: Настройка
 (autumn-opentelemetry). Вместе с ним по умолчанию включается инструментирование autumn-data, и каждый
 запрос к базе позиций стал бы спаном - поэтому в примере `otel.entity.enabled` выключен.
 
-## otel.onec-logs
+## otel.v8-logs
 
 | Параметр | По умолчанию | Описание |
 |----------|--------------|----------|

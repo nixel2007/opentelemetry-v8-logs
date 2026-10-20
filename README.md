@@ -1,6 +1,6 @@
-# opentelemetry-onec-logs
+# opentelemetry-v8-logs
 
-[![Тестирование](https://github.com/nixel2007/opentelemetry-onec-logs/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nixel2007/opentelemetry-onec-logs/actions/workflows/test.yml)
+[![Тестирование](https://github.com/nixel2007/opentelemetry-v8-logs/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nixel2007/opentelemetry-v8-logs/actions/workflows/test.yml)
 [![Telegram](https://img.shields.io/badge/Telegram-чат-blue?logo=telegram)](https://t.me/autumn_winow)
 
 Экспорт технологического журнала (ТЖ) и журнала регистрации (ЖР) 1С:Предприятия в OpenTelemetry по OTLP:
@@ -24,20 +24,20 @@
 ## Быстрый старт
 
 ```sh
-opm install opentelemetry-onec-logs
+opm install opentelemetry-v8-logs
 
 # стек LGTM для проверки
 docker compose -f demo/docker-compose.yml up -d
 
 # настройки - в autumn-properties.json текущего каталога, пример в demo/
 cp demo/autumn-properties.json .
-opentelemetry-onec-logs
+opentelemetry-v8-logs
 ```
 
 Grafana будет доступна на http://localhost:3000: логи в Explore → Loki
 (`{service_name="1c-cluster"}` - технологический журнал, `{service_name="erp"}` - журнал регистрации,
-`{service_name="opentelemetry-onec-logs"}` - логи самого коллектора), трассы в Explore → Tempo, метрики `onec_techlog_event_duration_*`
-и `onec_eventlog_records_total` в Prometheus.
+`{service_name="opentelemetry-v8-logs"}` - логи самого коллектора), трассы в Explore → Tempo, метрики `v8_techlog_event_duration_*`
+и `v8_eventlog_records_total` в Prometheus.
 
 Подробнее - в [документации](docs/product/010-index.md): [настройка](docs/product/020-configuration.md),
 [состав телеметрии](docs/product/030-telemetry.md).
