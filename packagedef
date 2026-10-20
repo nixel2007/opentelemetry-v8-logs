@@ -14,6 +14,7 @@
         .ВключитьФайл("lib.config")
         .ВключитьФайл("docs")
         .ВключитьФайл("README.md")
+        .ИсполняемыйФайл("src/main.os", "opentelemetry-onec-logs")
         .ЗависитОт("autumn", "5.0.2")
         .ЗависитОт("autumn-data", "3.0.0")
         .ЗависитОт("autumn-opentelemetry", "2.0.0")
