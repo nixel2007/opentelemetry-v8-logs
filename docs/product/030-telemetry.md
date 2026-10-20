@@ -84,7 +84,8 @@ title: Состав телеметрии
 | `user.name`, `user.id` | имя и идентификатор пользователя |
 | `onec.eventlog.computer`, `onec.eventlog.application` | компьютер и приложение |
 | `onec.eventlog.connection`, `onec.eventlog.session` | соединение и сеанс |
-| `onec.eventlog.transaction.status` | `committed`, `rolled_back`, `unfinished` |
+| `onec.eventlog.transaction.status` | `committed` (код `C`), `rolled_back` (код `R`): в журналах с этими кодами записаны события `_$Transaction$_.Commit` и `Rollback` |
+| `onec.eventlog.transaction.status_code` | код статуса транзакции как есть: `C`, `R`, `U` (у изменений данных внутри транзакции; значение не расшифровывается) |
 | `onec.eventlog.transaction.id` | номер транзакции |
 | `onec.eventlog.metadata`, `onec.eventlog.metadata.uuid` | объект метаданных |
 | `onec.eventlog.data`, `onec.eventlog.data.presentation` | данные и их представление |
