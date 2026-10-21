@@ -4,10 +4,11 @@ title: Содержимое Data журнала регистрации
 
 # Содержимое Data журнала регистрации
 
-Сложное содержимое поля `Data` дополнительно передается JSON-строкой в атрибуте
-`v8.eventlog.data.json`. Прежние `v8.eventlog.data`, `v8.eventlog.data.presentation`,
-текст тела лога, ресурсы и метрики сохраняются. Включать настройку не требуется.
-У обычных скаляров дополнительного атрибута нет.
+Содержимое поля `Data` передается в атрибуте `v8.eventlog.data`:
+для сложных значений — строка JSON, для скаляров — прежнее текстовое значение.
+Отдельный атрибут `v8.eventlog.data.json` не создается.
+`v8.eventlog.data.presentation`, текст тела лога, ресурсы и метрики сохраняются.
+Включать настройку не требуется.
 
 Правила разбора разработаны в [форке OneSTools.EventLog](https://github.com/APonkratov/OneSTools.EventLog/tree/015d838)
 и проверены на искусственных примерах, сопоставленных с выгрузкой платформы 8.3.27.2325.
@@ -135,11 +136,11 @@ title: Содержимое Data журнала регистрации
 
 ## Поиск в Loki
 
-Loki нормализует имя атрибута в `v8_eventlog_data_json`. Например:
+Loki нормализует имя атрибута в `v8_eventlog_data`. Например:
 
 ```logql
-{service_name="erp"} | v8_eventlog_data_json != ""
-  | line_format "{{.v8_eventlog_data_json}}" | json
+{service_name="erp"} | v8_eventlog_data =~ "^\\{.*"
+  | line_format "{{.v8_eventlog_data}}" | json
 ```
 
 Подставьте `service.name` своего источника и период журнала. Поля `Data` следует оставлять
