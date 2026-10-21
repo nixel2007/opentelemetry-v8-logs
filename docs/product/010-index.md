@@ -44,12 +44,14 @@ title: Экспорт журналов 1С в OpenTelemetry
 
 ```sh
 opm install opentelemetry-v8-logs
-opentelemetry-v8-logs          # постоянная работа
-opentelemetry-v8-logs --once   # один проход, например из планировщика
+opentelemetry-v8-logs              # постоянная работа (то же, что run)
+opentelemetry-v8-logs run --once   # один проход, например из планировщика
+opentelemetry-v8-logs --help
 ```
 
 Приложение запускается на сервере 1С (или там, где доступны каталоги журналов) и берет настройки
 из `autumn-properties.json` текущего каталога, см. [настройку](020-configuration.md).
+Однократный проход можно включить и переменной окружения `OTEL_V8_LOGS_ONCE=true`.
 
 ## Демонстрация
 
