@@ -150,8 +150,8 @@ Loki делает индексируемыми метками только ат�
 | `v8.eventlog.transaction.status_code` | код статуса транзакции как есть: `C`, `R`, `U` (у изменений данных внутри транзакции; значение не расшифровывается) |
 | `v8.eventlog.transaction.id` | номер транзакции |
 | `v8.eventlog.metadata`, `v8.eventlog.metadata.uuid` | объект метаданных |
-| `v8.eventlog.data`, `v8.eventlog.data.presentation` | данные и их представление |
-| `v8.eventlog.data.json` | JSON сложного `Data`: подтвержденные именованные поля или конверт с полным деревом неизвестной формы. Обычные скаляры остаются в `v8.eventlog.data`. Подробнее о [разборе Data](035-eventlog-data.md). |
+| `v8.eventlog.data` | JSON сложного `Data`: именованные поля известной формы или конверт с деревом неизвестной формы; у скаляров — текстовое значение. Подробнее о [разборе Data](035-eventlog-data.md). |
+| `v8.eventlog.data.presentation` | представление данных |
 | `v8.eventlog.server`, `v8.eventlog.port`, `v8.eventlog.sync_port` | рабочий сервер и порты |
 | `v8.eventlog.data_separation.<разделитель>` | значения разделителей сеанса |
 | `log.file.path` | путь к файлу журнала |
