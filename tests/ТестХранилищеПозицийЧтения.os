@@ -5,7 +5,7 @@
 // BSLLS:MissingReturnedValueDescription-off
 #Использовать autumn
 #Использовать asserts
-#Использовать "../src/Приложение"
+#Использовать "../src/Коллектор"
 
 Перем Хранилище;
 
