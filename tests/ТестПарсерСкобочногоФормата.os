@@ -3,8 +3,11 @@
 // BSLLS:PublicMethodsDescription-off
 // BSLLS:MissingParameterDescription-off
 // BSLLS:MissingReturnedValueDescription-off
-#Использовать ".."
+#Использовать "../src/ЖурналРегистрации"
 #Использовать asserts
+
+&Пластилин
+Перем ПарсерСкобочногоФормата;
 
 Перем ПС;
 

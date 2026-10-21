@@ -3,9 +3,12 @@
 // BSLLS:PublicMethodsDescription-off
 // BSLLS:MissingParameterDescription-off
 // BSLLS:MissingReturnedValueDescription-off
-#Использовать ".."
+#Использовать "../src/Чтение"
 #Использовать asserts
 #Использовать tempfiles
+
+&Пластилин
+Перем ЧтениеХвостаФайла;
 
 Перем ПС;
 Перем ВременныеФайлыТеста;

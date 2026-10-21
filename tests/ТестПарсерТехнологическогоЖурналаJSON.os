@@ -3,8 +3,11 @@
 // BSLLS:PublicMethodsDescription-off
 // BSLLS:MissingParameterDescription-off
 // BSLLS:MissingReturnedValueDescription-off
-#Использовать ".."
+#Использовать "../src/ТехнологическийЖурнал"
 #Использовать asserts
+
+&Пластилин
+Перем ПарсерТехнологическогоЖурналаJSON;
 
 Перем ПС;
 
