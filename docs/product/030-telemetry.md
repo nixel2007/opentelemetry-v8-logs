@@ -36,7 +36,7 @@ Loki делает индексируемыми метками только ат�
 |------|----------|
 | Время | время окончания события |
 | Тело | исходный текст события |
-| Серьезность | из свойства события `level`: `DEBUG`, `INFO`, `WARNING` - `WARN`, `ERROR`; без него или при другом значении - по имени события: `ERROR` для `EXCP`; `WARN` для `ATTN`, `TDEADLOCK`, `TTIMEOUT`; иначе `INFO` |
+| Серьезность | из свойства события `level`: `TRACE`, `DEBUG`, `INFO`, `WARNING` - `WARN`, `ERROR`; без него или при другом значении - по имени события: `ERROR` для `EXCP`; `WARN` для `ATTN`, `TDEADLOCK`, `TTIMEOUT`; иначе `INFO` |
 | `v8.techlog.event.name` | имя события (`CALL`, `DBMSSQL`...) |
 | `v8.techlog.duration` | длительность, мкс |
 | `v8.techlog.depth` | уровень вложенности |
