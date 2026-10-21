@@ -139,7 +139,7 @@ title: Содержимое Data журнала регистрации
 Loki нормализует имя атрибута в `v8_eventlog_data`. Например:
 
 ```logql
-{service_name="erp"} | v8_eventlog_data =~ "^\\{.*"
+{service_name="erp"} | v8_eventlog_data =~ `(?s)^\{.*`
   | line_format "{{.v8_eventlog_data}}" | json
 ```
 
