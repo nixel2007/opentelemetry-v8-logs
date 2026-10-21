@@ -16,7 +16,7 @@ jobs:
       oscript_version: 2.2.1
       test_engine: oneunit
       test_recursive: true
-      coveralls: true
+      coveralls: false
       sonarqube: true
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
