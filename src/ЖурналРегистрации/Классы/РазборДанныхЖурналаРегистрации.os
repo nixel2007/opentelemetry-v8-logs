@@ -5,15 +5,12 @@
 // https://github.com/APonkratov/OneSTools.EventLog/tree/015d838
 // Неподтвержденная маска, число или тип полей сохраняются полным деревом.
 
-Перем Формы; // Соответствие: событие -> массив подтвержденных форм
-Перем ПоляАутентификации; // Соответствие: наблюдаемая маска -> описание поля
-Перем ПоляПараметров; // Соответствие: наблюдаемая маска -> описание поля
-Перем ИменаПользователя; // Массив из Строка - порядок полей формы 65535
-Перем ТипыПользователя; // Строка - типы полей формы 65535
-Перем ИменаПолитики; // Массив из Строка - порядок полей формы 255
 Перем РегулярноеКоличество; // РегулярноеВыражение - целый неотрицательный счетчик
 Перем РегулярнаяДата; // РегулярноеВыражение - четырнадцать цифр даты
 Перем РегулярныйUUID; // РегулярноеВыражение - UUID в форме D
+
+&Пластилин
+Перем ПоляДанныхСобытийЖурналаРегистрации; // ПоляДанныхСобытийЖурналаРегистрации - общий словарь раскладок
 
 #Область ПрограммныйИнтерфейс
 
@@ -83,12 +80,7 @@
 		Возврат Неопределено;
 	КонецЕсли;
 	Тело = Узел[1];
-	Результат = ПозиционныеДанные(Событие, Узел);
-	Если Результат <> Неопределено Тогда
-		Возврат Результат;
-	КонецЕсли;
-
-	Описания = Формы[Событие];
+	Описания = ПоляДанныхСобытийЖурналаРегистрации.Раскладки(Событие);
 	Если Описания <> Неопределено Тогда
 		Для Каждого Описание Из Описания Цикл
 			Если Описание.Маска <> "" Тогда
@@ -96,7 +88,15 @@
 					Продолжить;
 				КонецЕсли;
 			КонецЕсли;
-			Результат = Поля(Тело, Описание.Имена, Описание.Типы, Описание.Смещение);
+			Если Описание.Обработка = "Пользователь" ИЛИ Описание.Обработка = "Позиционная" Тогда
+				Результат = ПозиционнаяФорма(Узел, Описание.Имена, Описание.Типы, Описание.Обработка = "Пользователь");
+			ИначеЕсли Описание.Обработка = "НастройкаАутентификации" Тогда
+				Результат = НастройкиАутентификации(Тело, Описание);
+			ИначеЕсли Описание.Обработка = "ПроверкаПароля" ИЛИ Описание.Обработка = "НарушениеПароля" Тогда
+				Результат = ПараметрыБазы(Узел, Описание);
+			Иначе
+				Результат = Поля(Тело, Описание.Имена, Описание.Типы, Описание.Смещение);
+			КонецЕсли;
 			Если Результат <> Неопределено Тогда
 				Возврат Результат;
 			КонецЕсли;
@@ -118,11 +118,6 @@
 			Если Таблица <> Неопределено Тогда
 				Возврат ОдноПоле("Data", Таблица);
 			КонецЕсли;
-		КонецЕсли;
-	ИначеЕсли Событие = "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate" Тогда
-		Результат = НастройкиАутентификации(Тело);
-		Если Результат <> Неопределено Тогда
-			Возврат Результат;
 		КонецЕсли;
 	ИначеЕсли Событие = "_$InfoBase$_.EventLogSettingsUpdate" ИЛИ Событие = "_$InfoBase$_.EventLogSettingsUpdateError" Тогда
 		Если Список(Тело, 2) И Литерал(Тело[0], "1") И Типизированный(Тело[1], "N") Тогда
@@ -283,32 +278,6 @@
 	Возврат Неопределено;
 КонецФункции
 
-Функция ПозиционныеДанные(Событие, Узел)
-	Тело = Узел[1];
-	Если Событие = "_$User$_.New" ИЛИ Событие = "_$User$_.Update"
-		ИЛИ Событие = "_$User$_.NewError" ИЛИ Событие = "_$User$_.UpdateError" Тогда
-		Если Список(Тело, 29) И Литерал(Тело[0], "65535") Тогда
-			Возврат ПозиционнаяФорма(Узел, ИменаПользователя, ТипыПользователя, Истина);
-		ИначеЕсли Список(Тело, 28) И Литерал(Тело[0], "65534") Тогда
-			Имена = Новый Массив;
-			Для Индекс = 0 По ИменаПользователя.ВГраница() Цикл
-				Если Индекс <> 12 Тогда
-					Имена.Добавить(ИменаПользователя[Индекс]);
-				КонецЕсли;
-			КонецЦикла;
-			Возврат ПозиционнаяФорма(Узел, Имена, "BBBSOBBBSSSABBTSBSBBTSDSBBB", Истина);
-		КонецЕсли;
-	ИначеЕсли Событие = "_$InfoBase$_.UserPasswordPolicyNew" ИЛИ Событие = "_$InfoBase$_.UserPasswordPolicyNewError"
-		ИЛИ Событие = "_$InfoBase$_.UserPasswordPolicyUpdate" Тогда
-		Если Список(Тело, 10) И Литерал(Тело[0], "255") Тогда
-			Возврат ПозиционнаяФорма(Узел, ИменаПолитики, "SNNNNBNBN");
-		КонецЕсли;
-	ИначеЕсли Событие = "_$InfoBase$_.ParametersUpdate" ИЛИ Событие = "_$InfoBase$_.ParametersUpdateError" Тогда
-		Возврат ПараметрыБазы(Узел);
-	КонецЕсли;
-	Возврат Неопределено;
-КонецФункции
-
 Функция ПозиционнаяФорма(Узел, Имена, Типы, ПростойJSON = Ложь)
 	Тело = Узел[1];
 	Если Тело.Количество() <> Имена.Количество() + 1 Тогда
@@ -368,55 +337,28 @@
 	Возврат Результат;
 КонецФункции
 
-Функция ПараметрыБазы(Узел)
-	Тело = Узел[1];
-	Если Тело.Количество() = 0 ИЛИ НЕ ЭтоСтрока(Тело[0]) Тогда
+Функция ПараметрыБазы(Узел, Описание)
+	ПроверенныеПоля = Поля(Узел[1], Описание.Имена, Описание.Типы, Описание.Смещение);
+	Если ПроверенныеПоля = Неопределено Тогда
 		Возврат Неопределено;
 	КонецЕсли;
-	Маска = Тело[0];
-	Если Маска = "448" Тогда
-		Возврат ПозиционнаяФорма(Узел, СтрРазделить("MaxUnsuccessfulAttemptsCount,LockDuration,UserNameAdditionCodes", ","), "NNS");
-	ИначеЕсли Маска = "192" Тогда
-		Возврат ПозиционнаяФорма(Узел, СтрРазделить("MaxUnsuccessfulAttemptsCount,LockDuration", ","), "NN");
-	ИначеЕсли Маска = "320" Тогда
-		Возврат ПозиционнаяФорма(Узел, СтрРазделить("MaxUnsuccessfulAttemptsCount,UserNameAdditionCodes", ","), "NS");
-	ИначеЕсли Маска = "384" Тогда
-		Возврат ПозиционнаяФорма(Узел, СтрРазделить("LockDuration,UserNameAdditionCodes", ","), "NS");
-	КонецЕсли;
-	Если НЕ Список(Тело, 2) Тогда
-		Возврат Неопределено;
-	КонецЕсли;
-	Если Маска = "4" Тогда
-		Если Типизированный(Тело[1], "N") И (Тело[1][1] = "0" ИЛИ Тело[1][1] = "3") Тогда
-			Возврат ПозиционныйКонверт(Узел, ОдноПоле("UserPasswordStrengthCheck", ?(Тело[1][1] = "3", "true", "false")));
+	Имя = Описание.Имена[0];
+	Токен = ПроверенныеПоля[Имя];
+	Если Описание.Обработка = "ПроверкаПароля" Тогда
+		Если Токен <> "0" И Токен <> "3" Тогда
+			Возврат Неопределено;
 		КонецЕсли;
-	ИначеЕсли Маска = "32768" Тогда
-		Если Типизированный(Тело[1], "N") Тогда
-			Значение = ЗначениеПеречисления(Тело[1][1], "Потребовать смену пароля|Предложить смену пароля|Нет");
-			Если Значение <> Неопределено Тогда
-				Возврат ПозиционныйКонверт(Узел, ОдноПоле("ActionOnUserPasswordRequirementsViolationOnAuthentication", Значение));
-			КонецЕсли;
-		КонецЕсли;
+		Возврат ПозиционныйКонверт(Узел, ОдноПоле(Имя, ?(Токен = "3", "true", "false")));
 	Иначе
-		Описание = ПоляПараметров[Маска];
-		Если Описание <> Неопределено Тогда
-			Возврат ПозиционнаяФорма(Узел, Описание.Имена, Описание.Типы);
+		Значение = ЗначениеПеречисления(Токен, "Потребовать смену пароля|Предложить смену пароля|Нет");
+		Если Значение = Неопределено Тогда
+			Возврат Неопределено;
 		КонецЕсли;
 	КонецЕсли;
-	Возврат Неопределено;
+	Возврат ПозиционныйКонверт(Узел, ОдноПоле(Имя, Значение));
 КонецФункции
 
-Функция НастройкиАутентификации(Тело)
-	Если Список(Тело, 4) И Литерал(Тело[0], "2564") Тогда
-		Возврат Поля(Тело, СтрРазделить("VerificationCodeLength,Header,ShowHelpHyperlink", ","), "NSB", 1);
-	КонецЕсли;
-	Если НЕ Список(Тело, 2) ИЛИ НЕ ЭтоСтрока(Тело[0]) Тогда
-		Возврат Неопределено;
-	КонецЕсли;
-	Описание = ПоляАутентификации[Тело[0]];
-	Если Описание = Неопределено Тогда
-		Возврат Неопределено;
-	КонецЕсли;
+Функция НастройкиАутентификации(Тело, Описание)
 	Результат = Поля(Тело, Описание.Имена, Описание.Типы, 1);
 	Если Результат = Неопределено Тогда
 		Возврат Неопределено;
@@ -562,114 +504,11 @@
 	Возврат Результат;
 КонецФункции
 
-Процедура ДобавитьФорму(События, Имена, Типы, Маска = "", Смещение = 0)
-	Описание = Новый Структура("Имена, Типы, Маска, Смещение", СтрРазделить(Имена, ","), Типы, Маска, Смещение);
-	Для Каждого Событие Из СтрРазделить(События, ",") Цикл
-		Если Формы[Событие] = Неопределено Тогда
-			Формы.Вставить(Событие, Новый Массив);
-		КонецЕсли;
-		Формы[Событие].Добавить(Описание);
-	КонецЦикла;
-КонецПроцедуры
-
-Процедура ДобавитьПоле(Таблица, Маска, Имя, Вид)
-	Таблица.Вставить(Маска, Новый Структура("Имена, Типы", СтрРазделить(Имя, ","), Вид));
-КонецПроцедуры
-
-Процедура ЗаполнитьФормы()
-	ДобавитьФорму("_$Session$_.Authentication,_$Session$_.AuthenticationError", "Name,CurrentOSUser,AuthenticationMethod", "SSN", "518", 1);
-	ДобавитьФорму("_$Session$_.Authentication,_$Session$_.AuthenticationError", "Name,AuthenticationMethod", "SN", "514", 1);
-	ДобавитьФорму("_$Session$_.Authentication,_$Session$_.AuthenticationError", "OSUser,AuthenticationMethod", "SN", "513", 1);
-	ДобавитьФорму("_$InfoBase$_.ConfigUpdate,_$InfoBase$_.DBConfigUpdate,_$InfoBase$_.ConfigUpdateError,_$InfoBase$_.DBConfigUpdateError", "Vendor,Version", "SS");
-	ДобавитьФорму("_$InfoBase$_.ExclusiveModeChange,_$InfoBase$_.ExclusiveModeChangeError", "ExclusiveMode", "B", "2", 1);
-	ДобавитьФорму("_$Access$_.AccessDenied", "Right", "S", "1", 1);
-	ДобавитьФорму("_$Access$_.AccessDenied", "Action,Data", "SU", "6", 1);
-	ДобавитьФорму("_$Session$_.ConfigExtensionApplyError,_$InfoBase$_.UserPasswordPolicyDelete,_$InfoBase$_.UserPasswordPolicyDeleteError,_$User$_.Delete,_$User$_.DeleteError", "Name", "S");
-	ДобавитьФорму("_$InfoBase$_.EventLogSettingsUpdate,_$InfoBase$_.EventLogSettingsUpdateError", "EventName,EventIsLogged", "SB", "24", 1);
-	ДобавитьФорму("_$InfoBase$_.EventLogReduce,_$InfoBase$_.EventLogReduceError", "Date", "D");
-	ДобавитьФорму("_$InfoBase$_.RegionalSettingsChange", "LocaleCode,UseCurrentSessionSettings,NumbersDecimalSeparator,NumbersDigitGroupSeparator,NumbersDigitGroupFormat,NegativeNumberPresentation,BooleanFalsePresentation,BooleanTruePresentation,DatePresentationFormat,TimePresentationFormat,FirstDayOfWeek", "SBSSSNSSSSN");
-	ДобавитьФорму("_$Session$_.ExternalDataProcessorConnect,_$Session$_.ExternalDataProcessorConnectError,_$Session$_.ExternalReportConnect,_$Session$_.ExternalReportConnectError", "Path,Name,SafeMode,SecurityProfile,UnsafeOperationProtection,LanguageCode", "SSBSBS");
-	ДобавитьФорму("_$Session$_.AddInAttach,_$Session$_.AddInAttachError", "Name,Location,Type,AttachmentType", "SSUU");
-	ДобавитьФорму("_$InfoBase$_.SessionLockChange,_$InfoBase$_.SessionLockChangeError", "Use,Begin,End,Message,KeyCode,Parameter", "BDDSSS");
-	ДобавитьФорму("_$InfoBase$_.ConfigExtensionUpdate,_$InfoBase$_.DBConfigExtensionInsert,_$InfoBase$_.DBConfigExtensionInsertError,_$InfoBase$_.DBConfigExtensionDeleteError,_$InfoBase$_.DBConfigExtensionUpdate,_$InfoBase$_.DBConfigExtensionUpdateError,_$InfoBase$_.DBConfigExtensionDelete", "Name,Version,Vendor,UUID,HashSum,Synonym,SafeMode,SecurityProfile,Active,UnsafeOperationProtection,Purpose,UsedInDistributedInfoBase,Scope,DefaultRoles,UseDefaultRolesForAllUsers", "SSSSSSBSBBSBSAB");
-КонецПроцедуры
-
-Процедура ЗаполнитьМаски()
-	ДобавитьПоле(ПоляАутентификации, "1", "PasswordRecoveryMethod", "N");
-	ДобавитьПоле(ПоляАутентификации, "2", "PasswordRecoveryURL", "S");
-	ДобавитьПоле(ПоляАутентификации, "4", "VerificationCodeLength", "N");
-	ДобавитьПоле(ПоляАутентификации, "8", "MaxUnsuccessfulVerificationCodeValidationAttemptsCount", "N");
-	ДобавитьПоле(ПоляАутентификации, "16", "SMTPServerAddress", "S");
-	ДобавитьПоле(ПоляАутентификации, "32", "SMTPUser", "S");
-	ДобавитьПоле(ПоляАутентификации, "64", "SMTPPasswordChanged", "B");
-	ДобавитьПоле(ПоляАутентификации, "128", "SMTPPort", "N");
-	ДобавитьПоле(ПоляАутентификации, "256", "SenderName", "S");
-	ДобавитьПоле(ПоляАутентификации, "512", "Header", "S");
-	ДобавитьПоле(ПоляАутентификации, "1024", "HTMLMessageText", "S");
-	ДобавитьПоле(ПоляАутентификации, "2048", "ShowHelpHyperlink", "B");
-	ДобавитьПоле(ПоляАутентификации, "4096", "HelpURL", "S");
-	ДобавитьПоле(ПоляАутентификации, "8192", "VerificationCodeRefreshRequestLockDuration", "N");
-	ДобавитьПоле(ПоляАутентификации, "16384", "UseSSL", "B");
-	ДобавитьПоле(ПоляАутентификации, "32768", "AllowAutoSaveAuthentication", "B");
-	ДобавитьПоле(ПоляАутентификации, "65536", "AutoSaveAuthenticationByDefault", "B");
-	ДобавитьПоле(ПоляАутентификации, "131072", "AutoSavedAuthenticationLifeTime", "N");
-	ДобавитьПоле(ПоляАутентификации, "262144", "UseStandardPasswordCompromiseCheckList", "B");
-	ДобавитьПоле(ПоляАутентификации, "524288", "UseSpecifiedPasswordCompromiseCheckList", "B");
-	ДобавитьПоле(ПоляАутентификации, "1048576", "UsePasswordCompromiseCheckService", "B");
-	ДобавитьПоле(ПоляАутентификации, "2097152", "PasswordCompromiseCheckServiceURL", "S");
-	ДобавитьПоле(ПоляАутентификации, "4194304", "PasswordCompromiseCheckServiceRequestTimeout", "N");
-	ДобавитьПоле(ПоляАутентификации, "8388608", "IgnorePasswordCompromiseCheckServiceErrors", "B");
-	ДобавитьПоле(ПоляАутентификации, "16777216", "VerificationCodeEffectivePeriod", "N");
-	ДобавитьПоле(ПоляАутентификации, "33554432", "EmailAuthenticationMethod", "N");
-	ДобавитьПоле(ПоляАутентификации, "67108864", "EmailAuthenticationVerificationCodeLength", "N");
-	ДобавитьПоле(ПоляАутентификации, "134217728", "EmailAuthenticationMaxUnsuccessfulVerificationCodeValidationAttemptsCount", "N");
-	ДобавитьПоле(ПоляАутентификации, "268435456", "EmailAuthenticationSMTPServerAddress", "S");
-	ДобавитьПоле(ПоляАутентификации, "536870912", "EmailAuthenticationSMTPUser", "S");
-	ДобавитьПоле(ПоляАутентификации, "1073741824", "EmailAuthenticationSMTPPasswordChanged", "B");
-	ДобавитьПоле(ПоляАутентификации, "2147483648", "EmailAuthenticationSMTPPort", "N");
-	ДобавитьПоле(ПоляАутентификации, "4294967296", "EmailAuthenticationSenderName", "S");
-	ДобавитьПоле(ПоляАутентификации, "8589934592", "EmailAuthenticationHeader", "S");
-	ДобавитьПоле(ПоляАутентификации, "17179869184", "EmailAuthenticationHTMLMessageText", "S");
-	ДобавитьПоле(ПоляАутентификации, "34359738368", "EmailAuthenticationVerificationCodeRefreshRequestLockDuration", "N");
-	ДобавитьПоле(ПоляАутентификации, "68719476736", "EmailAuthenticationUseSSLWhenSendingVerificationCode", "B");
-	ДобавитьПоле(ПоляАутентификации, "137438953472", "EmailAuthenticationVerificationCodeEffectivePeriod", "N");
-	ДобавитьПоле(ПоляАутентификации, "549755813888", "PasswordRecoverySMTPSecureAuthenticationOnly", "B");
-	ДобавитьПоле(ПоляАутентификации, "1099511627776", "PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode", "N");
-	ДобавитьПоле(ПоляАутентификации, "2199023255552", "PasswordRecoveryAccessTokenChanged", "B");
-	ДобавитьПоле(ПоляАутентификации, "8796093022208", "EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode", "N");
-	ДобавитьПоле(ПоляАутентификации, "17592186044416", "EmailAuthenticationAccessTokenChanged", "B");
-	ДобавитьПоле(ПоляАутентификации, "35184372088832", "PasswordRecoveryFrom", "S");
-	ДобавитьПоле(ПоляАутентификации, "70368744177664", "EmailAuthenticationFrom", "S");
-	ДобавитьПоле(ПоляПараметров, "1", "LockWaitTime", "N");
-	ДобавитьПоле(ПоляПараметров, "2", "UserPasswordMinLength", "N");
-	ДобавитьПоле(ПоляПараметров, "8", "PassiveSessionHibernateTime", "N");
-	ДобавитьПоле(ПоляПараметров, "16", "HibernateSessionTerminateTime", "N");
-	ДобавитьПоле(ПоляПараметров, "64", "MaxUnsuccessfulAttemptsCount", "N");
-	ДобавитьПоле(ПоляПараметров, "128", "LockDuration", "N");
-	ДобавитьПоле(ПоляПараметров, "256", "UserNameAdditionCodes", "S");
-	ДобавитьПоле(ПоляПараметров, "512", "UserPasswordMinEffectivePeriod", "N");
-	ДобавитьПоле(ПоляПараметров, "1024", "UserPasswordMaxEffectivePeriod", "N");
-	ДобавитьПоле(ПоляПараметров, "2048", "UserPasswordReuseLimit", "N");
-	ДобавитьПоле(ПоляПараметров, "4096", "UserPasswordExpirationNotificationPeriod", "N");
-	ДобавитьПоле(ПоляПараметров, "8192", "UserPasswordHashAlgorithmType", "S");
-	ДобавитьПоле(ПоляПараметров, "16384", "UserPasswordCompromiseCheck", "B");
-	ДобавитьПоле(ПоляПараметров, "65536", "InactivityTimeForTerminateSessionNotification", "N");
-	ДобавитьПоле(ПоляПараметров, "131072", "InactivityTimeForTerminateSession", "N");
-КонецПроцедуры
-
 #КонецОбласти
 
 &Желудь
 Процедура ПриСозданииОбъекта()
-	Формы = Новый Соответствие;
-	ПоляАутентификации = Новый Соответствие;
-	ПоляПараметров = Новый Соответствие;
 	РегулярноеКоличество = Новый РегулярноеВыражение("\A[0-9]+\z");
 	РегулярнаяДата = Новый РегулярноеВыражение("^[0-9]{14}$");
 	РегулярныйUUID = Новый РегулярноеВыражение("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
-	ИменаПользователя = СтрРазделить("OSAuthentication,StandardAuthentication,CannotChangePassword,Name,Language,PasswordChanged,PasswordIsSet,ShowInList,FullName,OSUser,RunMode,Roles,DefaultInterface,OpenIDAuthentication,UnsafeOperationProtection,SecondAuthenticationFactorSettings,SecondAuthenticationFactorSettingsProcessing,CannotRecoveryPassword,Email,OpenIDConnectAuthentication,AccessTokenAuthentication,UserMatchingKeys,PasswordPolicyName,PasswordSettingDate,PasswordHashAlgorithmType,QRCodeAuthentication,PasswordDoesNotSatisfyRequirements,EmailAuthentication", ",");
-	ТипыПользователя = "BBBSOBBBSSSAOBBTSBSBBTSDSBBB";
-	ИменаПолитики = СтрРазделить("Name,PasswordMaxEffectivePeriod,PasswordMinEffectivePeriod,PasswordMinLength,PasswordReuseLimit,PasswordStrengthCheck,PasswordExpirationNotificationPeriod,PasswordCompromiseCheck,ActionOnPasswordRequirementsViolationOnAuthenticationCode", ",");
-	ЗаполнитьФормы();
-	ЗаполнитьМаски();
 КонецПроцедуры
