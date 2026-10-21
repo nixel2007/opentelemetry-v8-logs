@@ -1,4 +1,3 @@
-#native
 // BSLLS:MagicNumber-off
 // BSLLS:MissingVariablesDescription-off
 // BSLLS:PublicMethodsDescription-off
