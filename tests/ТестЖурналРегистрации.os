@@ -1,4 +1,4 @@
-﻿// BSLLS:MagicNumber-off
+// BSLLS:MagicNumber-off
 // BSLLS:MissingVariablesDescription-off
 // BSLLS:PublicMethodsDescription-off
 // BSLLS:MissingParameterDescription-off
