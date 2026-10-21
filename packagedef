@@ -19,6 +19,7 @@
         .ВключитьФайл("src")
         .ВключитьФайл("docs")
         .ВключитьФайл("README.md")
+        .ВключитьФайл("LICENSE.onestools.md")
         .ИсполняемыйФайл("src/main.os", "opentelemetry-v8-logs")
         .ЗависитОт("autumn", "5.0.2")
         .ЗависитОт("autumn-data", "3.0.0")
