@@ -1,3 +1,4 @@
+#native
 #Использовать autumn
 #Использовать autumn-logos
 #Использовать autumn-opentelemetry

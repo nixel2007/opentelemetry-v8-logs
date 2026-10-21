@@ -1,3 +1,4 @@
+#native
 #Использовать "../../Коллектор"
 
 // Команда run: читает журналы 1С из настроек autumn-properties.json и передает их в OpenTelemetry.

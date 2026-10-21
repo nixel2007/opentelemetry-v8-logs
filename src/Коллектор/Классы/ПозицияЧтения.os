@@ -1,3 +1,4 @@
+#native
 // BSLLS:ExportVariables-off
 #Использовать autumn-data
 
