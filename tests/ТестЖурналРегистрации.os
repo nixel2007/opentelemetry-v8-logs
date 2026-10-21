@@ -19,6 +19,9 @@
 &Пластилин
 Перем ПредставленияСобытийЖурналаРегистрации;
 
+&Пластилин
+Перем ПоляДанныхСобытийЖурналаРегистрации;
+
 Перем ПС;
 
 &Тест
@@ -198,6 +201,46 @@
 		.Равно("47:976d00d8612c645111efb1744b0ce2e8");
 	Ожидаем.Что(ДанныеЗаписи("{""P"",{518,{""S"",""""},{""S"",""DESKTOP\ДНС""},{""N"",1}}}"))
 		.Равно("DESKTOP\ДНС; 1");
+
+КонецПроцедуры
+
+&Тест
+Процедура ПоляДанныхСобытияПользователяИзСп() Экспорт
+
+	// Дано-Когда
+	Поля = ПоляДанныхСобытийЖурналаРегистрации.ИменаПолей("_$User$_.Update");
+
+	// Тогда - EN-имена в порядке UnloadEventLog 8.5.1
+	Ожидаем.Что(СтрСоединить(Поля, ",")).Равно(
+		"OSAuthentication,StandardAuthentication,AccessTokenAuthentication,"
+		+ "OpenIDAuthentication,OpenIDConnectAuthentication,QRCodeAuthentication,"
+		+ "PasswordSettingDate,UnsafeOperationProtection,CannotChangePassword,"
+		+ "Name,PasswordPolicyName,UserMatchingKeys,DefaultInterface,"
+		+ "PasswordChanged,PasswordDoesNotSatisfyRequirements,PasswordIsSet,"
+		+ "ShowInList,FullName,OSUser,RunMode,Roles,"
+		+ "UserPasswordHashAlgorithmType,Language");
+	Ожидаем.Что(ПоляДанныхСобытийЖурналаРегистрации.ИменаПолей("_$User$_.New"))
+		.Равно(Поля);
+
+КонецПроцедуры
+
+&Тест
+Процедура ПоляДанныхНаследуютсяКакВСп() Экспорт
+
+	Ожидаем.Что(ПоляДанныхСобытийЖурналаРегистрации.ИменаПолей(
+			"_$Session$_.AuthenticationError"))
+		.Равно(ПоляДанныхСобытийЖурналаРегистрации.ИменаПолей(
+			"_$Session$_.Authentication"));
+
+КонецПроцедуры
+
+&Тест
+Процедура БезПолейДанныхВозвращаетсяНеопределено() Экспорт
+
+	Ожидаем.Что(ПоляДанныхСобытийЖурналаРегистрации.ИменаПолей(
+			"_$InfoBase$_.PredefinedDataUpdate")).Равно(Неопределено);
+	Ожидаем.Что(ПоляДанныхСобытийЖурналаРегистрации.ИменаПолей("otel.test"))
+		.Равно(Неопределено);
 
 КонецПроцедуры
 
