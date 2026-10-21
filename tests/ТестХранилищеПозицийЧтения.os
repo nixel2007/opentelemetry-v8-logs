@@ -3,6 +3,10 @@
 // BSLLS:PublicMethodsDescription-off
 // BSLLS:MissingParameterDescription-off
 // BSLLS:MissingReturnedValueDescription-off
+// BSLLS:DuplicateStringLiteral-off
+// BSLLS:MagicDate-off
+// BSLLS:NestedFunctionInParameters-off
+// BSLLS:Typo-off
 #Использовать autumn
 #Использовать asserts
 #Использовать "../src/Коллектор"

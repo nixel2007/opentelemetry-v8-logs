@@ -3,6 +3,10 @@
 // BSLLS:PublicMethodsDescription-off
 // BSLLS:MissingParameterDescription-off
 // BSLLS:MissingReturnedValueDescription-off
+// BSLLS:DuplicateStringLiteral-off
+// BSLLS:MagicDate-off
+// BSLLS:NestedFunctionInParameters-off
+// BSLLS:Typo-off
 #Использовать "../src/ТехнологическийЖурнал"
 #Использовать asserts
 #Использовать tempfiles
@@ -37,9 +41,11 @@
 КонецПроцедуры
 
 // Способ вывода лога приложения
+// BSLLS:UnusedParameters-off
 Процедура Вывести(Знач Сообщение, Знач УровеньСообщения) Экспорт
 	СообщенияЛога.Добавить(Сообщение);
 КонецПроцедуры
+// BSLLS:UnusedParameters-on
 
 // Способ вывода лога приложения
 Процедура Закрыть() Экспорт

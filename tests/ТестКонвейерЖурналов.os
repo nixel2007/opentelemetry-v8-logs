@@ -3,6 +3,10 @@
 // BSLLS:PublicMethodsDescription-off
 // BSLLS:MissingParameterDescription-off
 // BSLLS:MissingReturnedValueDescription-off
+// BSLLS:DuplicateStringLiteral-off
+// BSLLS:MagicDate-off
+// BSLLS:NestedFunctionInParameters-off
+// BSLLS:Typo-off
 #Использовать "../src/Конвейер"
 #Использовать "../src/ТехнологическийЖурнал"
 #Использовать asserts
@@ -50,12 +54,14 @@
 КонецПроцедуры
 
 // Экспортер событий
+// BSLLS:UnusedParameters-off
 Процедура ОбработатьСобытияТехнологическогоЖурнала(События, ОписаниеФайла) Экспорт
 	ПакетыПолученных.Добавить(События.Количество());
 	Для Каждого Событие Из События Цикл
 		Полученные.Добавить(Событие);
 	КонецЦикла;
 КонецПроцедуры
+// BSLLS:UnusedParameters-on
 
 // Экспортер: завершение прохода
 Процедура ЗавершитьПроход() Экспорт
@@ -94,10 +100,12 @@
 КонецПроцедуры
 
 // Сброс буферов телеметрии
+// BSLLS:UnusedParameters-off
 Функция СброситьБуфер(ТаймаутМс = 0) Экспорт
 	Сбросы = Сбросы + 1;
 	Возврат ?(СбросУспешен, ОтелРезультатыЭкспорта.Успех(), ОтелРезультатыЭкспорта.Ошибка());
 КонецФункции
+// BSLLS:UnusedParameters-on
 
 &Тест
 Процедура ПослеЧтенияЭкспортерЗавершаетПроходИБуферСбрасывается() Экспорт
@@ -199,9 +207,13 @@
 КонецПроцедуры
 
 // Читатель, который всегда падает
+// BSLLS:UnusedParameters-off
+// BSLLS:FunctionShouldHaveReturn-off
 Функция Прочитать(Обработчик) Экспорт
 	ВызватьИсключение "Каталог недоступен";
 КонецФункции
+// BSLLS:FunctionShouldHaveReturn-on
+// BSLLS:UnusedParameters-on
 
 Процедура ЗафиксироватьПозиции() Экспорт
 КонецПроцедуры

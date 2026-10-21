@@ -3,6 +3,10 @@
 // BSLLS:PublicMethodsDescription-off
 // BSLLS:MissingParameterDescription-off
 // BSLLS:MissingReturnedValueDescription-off
+// BSLLS:DuplicateStringLiteral-off
+// BSLLS:MagicDate-off
+// BSLLS:NestedFunctionInParameters-off
+// BSLLS:Typo-off
 #Использовать autumn
 #Использовать asserts
 #Использовать tempfiles
@@ -47,7 +51,8 @@
 	// Тогда
 	Ожидаем.Что(Количество).Равно(3);
 	Хранилище = Поделка.НайтиЖелудь("ХранилищеПозицийЧтения");
-	ПутьТехнологическогоЖурнала = Новый Файл(ОбъединитьПути(КаталогТехнологическогоЖурнала, "rphost_1", "26102009.log")).ПолноеИмя;
+	ПутьТехнологическогоЖурнала = Новый Файл(
+		ОбъединитьПути(КаталогТехнологическогоЖурнала, "rphost_1", "26102009.log")).ПолноеИмя;
 	Ожидаем.Что(Хранилище.Позиция(ПутьТехнологическогоЖурнала)).Больше(0);
 	Ожидаем.Что(Коллектор.ВыполнитьПроход()).Равно(0);
 
