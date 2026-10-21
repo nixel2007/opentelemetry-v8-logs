@@ -5,6 +5,8 @@
 #
 # Grafana: http://localhost:3000 (admin/admin), OTLP: 4317 (gRPC), 4318 (HTTP).
 # Конфигурация Loki заменена на loki-config.yaml: база (v8.infobase.name) - индексируемая метка.
+# Конфигурация Tempo заменена на tempo-config.yaml: спаны накопленных журналов находятся поиском
+# по своему времени, а не по времени выгрузки.
 
 services:
   lgtm:
@@ -15,3 +17,4 @@ services:
       - "4318:4318"
     volumes:
       - ./loki-config.yaml:/otel-lgtm/loki-config.yaml:ro
+      - ./tempo-config.yaml:/otel-lgtm/tempo-config.yaml:ro

@@ -1,0 +1,63 @@
+# Конфигурация Tempo для демонстрации: конфигурация образа grafana/otel-lgtm 0.30.0
+# (https://github.com/grafana/docker-otel-lgtm/blob/v0.30.0/docker/tempo-config.yaml, Apache License 2.0)
+# с увеличенным ingestion_time_range_slack. Tempo записывает в метаданные блока время поступления
+# данных, если время спанов отстоит от него больше чем на этот запас (по умолчанию 2m), а поиск
+# по интервалу времени выбирает блоки по метаданным. При первой выгрузке накопленных журналов или
+# догоне после простоя спаны старше двух минут иначе не находятся поиском (по идентификатору
+# трассы - находятся). Запас равен сроку хранения блоков (block_retention, по умолчанию 336h).
+
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9096
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "127.0.0.1:4417"
+        http:
+          endpoint: "127.0.0.1:4418"
+
+memberlist:
+  bind_addr: [127.0.0.1]
+  bind_port: 7947
+
+querier:
+  frontend_worker:
+    frontend_address: 127.0.0.1:9096
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /data/tempo/wal
+      ingestion_time_range_slack: 336h
+    local:
+      path: /data/tempo/blocks
+
+live_store:
+  wal:
+    ingestion_time_range_slack: 336h
+
+block_builder:
+  wal:
+    ingestion_time_range_slack: 336h
+
+metrics_generator:
+  processor:
+    span_metrics:
+      dimensions:
+        - service_name
+        - operation
+        - status_code
+  storage:
+    path: /data/tempo/generator/wal
+    remote_write:
+      - url: http://127.0.0.1:9090/api/v1/write
+        send_exemplars: true
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics]
