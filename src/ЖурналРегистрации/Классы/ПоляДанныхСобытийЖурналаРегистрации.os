@@ -1,253 +1,613 @@
 #native
 
-// EN-имена полей Data системных событий журнала регистрации.
-//
-// Порядок и способ кодирования — как в *.lgp (хранение), не как список в
-// UnloadEventLog СП. Имена EN — ключи OTLP/метрик.
-//
-// {P,{Маска, Значение…}} — бит N → поле; значения по возрастанию установленных битов.
-// {P,{Значение…}} или плотный ряд после маски (User.*) — ИменаПолей по позиции.
-// События без проверенной раскладки: состав из СП как Последовательность (черновик).
-// Одинаковый состав — ПоОбразцу.
+// Реестр поддерживаемых форм Data журнала регистрации.
+// Имена, типы, расположение и преобразования задаются в одном описании события.
 
-Перем Поля; // Соответствие: событие -> Массив EN (порядок хранения)
-Перем БитыПоСобытию; // Соответствие: событие -> Соответствие(НомерБита -> Имя)
-Перем СпособПоСобытию; // Соответствие: событие -> "Маска" | "Последовательность"
+Перем Описания; // Соответствие: код события -> описание
+Перем Семейства; // Массив из Структура - уникальные описания семейств
 
 #Область ПрограммныйИнтерфейс
 
-// Способ кодирования Data в файле журнала.
+// Начинает флюент-описание события.
 //
 // Параметры:
-//   Событие - Строка - идентификатор события (_$Session$_.Authentication…)
+//   Код - Строка - исходный код события
 //
 // Возвращаемое значение:
-//   Строка, Неопределено - "Маска", "Последовательность"; без состава - Неопределено
+//   СобытиеДанныхЖурналаРегистрации - построитель
 //
-Функция Способ(Знач Событие) Экспорт
-	Возврат СпособПоСобытию[Событие];
+Функция Событие(Код) Экспорт
+
+	Возврат Новый СобытиеДанныхЖурналаРегистрации(ЭтотОбъект, Код);
+
 КонецФункции
 
-// EN-имена полей Data в порядке хранения значений (после маски или без неё).
-// Для способа Маска — Неопределено (см. ИмяПоБиту / Биты).
+// Поддерживаемое событие; отсутствующий код возвращает Неопределено.
 //
 // Параметры:
-//   Событие - Строка - идентификатор события (_$User$_.Update…)
+//   Код - Строка - исходный код события
 //
 // Возвращаемое значение:
-//   Массив из Строка, Неопределено - имена полей; без состава или Маска - Неопределено
+//   Структура, Неопределено - Коды, Поля, Формы
 //
-Функция ИменаПолей(Знач Событие) Экспорт
-	Возврат Поля[Событие];
+Функция Описание(Код) Экспорт
+
+	Возврат Описания[Код];
+
 КонецФункции
 
-// Карта бит (0-based) → EN-имя для способа Маска.
-//
-// Параметры:
-//   Событие - Строка - идентификатор события (_$Session$_.Authentication…)
+// Все уникальные описания реестра.
 //
 // Возвращаемое значение:
-//   Соответствие, Неопределено - ключ Число (номер бита), значение Строка; иначе Неопределено
+//   Массив из Структура - поддерживаемые семейства событий
 //
-Функция Биты(Знач Событие) Экспорт
-	Возврат БитыПоСобытию[Событие];
+Функция ВсеОписания() Экспорт
+
+	Возврат Семейства;
+
 КонецФункции
 
-// Имя поля по номеру бита (0-based), если способ — Маска.
+// Допустимые формы чтения события.
 //
 // Параметры:
-//   Событие - Строка - идентификатор события
-//   НомерБита - Число - номер бита в маске присутствия
+//   Код - Строка - исходный код события
 //
 // Возвращаемое значение:
-//   Строка, Неопределено - EN-имя поля; нет раскладки или бита - Неопределено
+//   Массив из Структура, Неопределено - готовые формы декодера
 //
-Функция ИмяПоБиту(Знач Событие, Знач НомерБита) Экспорт
-	Карта = БитыПоСобытию[Событие];
-	Если Карта = Неопределено Тогда
+Функция Раскладки(Код) Экспорт
+
+	Событие = Описания[Код];
+	Возврат ?(Событие = Неопределено, Неопределено, Событие.Формы);
+
+КонецФункции
+
+// Способ первой поддерживаемой формы.
+//
+// Параметры:
+//   Код - Строка - код события
+//
+// Возвращаемое значение:
+//   Строка, Неопределено - Маска или Последовательность
+//
+Функция Способ(Код) Экспорт
+
+	Формы = Раскладки(Код);
+	Если Формы = Неопределено Тогда
 		Возврат Неопределено;
 	КонецЕсли;
-	Возврат Карта[НомерБита];
+
+	Возврат ?(Формы[0].Вид = "Маска", "Маска", "Последовательность");
+
 КонецФункции
+
+// Имена полей первой позиционной формы, до переименования JSON.
+//
+// Параметры:
+//   Код - Строка - код события
+//
+// Возвращаемое значение:
+//   Массив из Строка, Неопределено - имена; для битовых форм Неопределено
+//
+Функция ИменаПолей(Код) Экспорт
+
+	Формы = Раскладки(Код);
+	Если Формы = Неопределено ИЛИ Формы[0].Вид = "Маска" Тогда
+		Возврат Неопределено;
+	КонецЕсли;
+
+	Возврат Формы[0].Имена;
+
+КонецФункции
+
+// Карта битов поддерживаемых полей события.
+//
+// Параметры:
+//   Код - Строка - код события
+//
+// Возвращаемое значение:
+//   Соответствие, Неопределено - номер бита -> имя поля
+//
+Функция Биты(Код) Экспорт
+
+	Событие = Описания[Код];
+	Если Событие = Неопределено ИЛИ Способ(Код) <> "Маска" Тогда
+		Возврат Неопределено;
+	КонецЕсли;
+
+	Результат = Новый Соответствие;
+	Для Каждого Поле Из Событие.Поля Цикл
+		Если Поле.Бит <> Неопределено Тогда
+			Результат.Вставить(Поле.Бит, Поле.Имя);
+		КонецЕсли;
+	КонецЦикла;
+
+	Возврат Результат;
+
+КонецФункции
+
+// Имя поддерживаемого поля по номеру бита.
+//
+// Параметры:
+//   Код - Строка - код события
+//   НомерБита - Число - номер бита с нуля
+//
+// Возвращаемое значение:
+//   Строка, Неопределено - имя поля
+//
+Функция ИмяПоБиту(Код, НомерБита) Экспорт
+
+	Карта = Биты(Код);
+	Возврат ?(Карта = Неопределено, Неопределено, Карта[НомерБита]);
+
+КонецФункции
+
+#КонецОбласти
+
+#Область СлужебныйПрограммныйИнтерфейс
+
+// Регистрирует описание после проверки всех кодов, без частичного добавления.
+//
+// Параметры:
+//   Данные - Структура - коды, поля и готовые формы
+//
+Процедура ДобавитьОписание(Данные) Экспорт
+
+	// Проверяем все аналоги до изменения словаря: конфликт не должен добавить часть кодов.
+	Коды = Новый Соответствие;
+	Для Каждого Код Из Данные.Коды Цикл
+		Если Код = "" ИЛИ Описания[Код] <> Неопределено ИЛИ Коды[Код] <> Неопределено Тогда
+			ВызватьИсключение "Повторный или пустой код события: " + Код;
+		КонецЕсли;
+
+		Коды.Вставить(Код, Истина);
+	КонецЦикла;
+
+	Для Каждого Код Из Данные.Коды Цикл
+		Описания.Вставить(Код, Данные);
+	КонецЦикла;
+
+	Семейства.Добавить(Данные);
+
+КонецПроцедуры
 
 #КонецОбласти
 
 #Область СлужебныеПроцедурыИФункции
 
-Процедура Добавить(Событие, Имена)
-	СпособПоСобытию.Вставить(Событие, "Последовательность");
-	Поля.Вставить(Событие, СтрРазделить(Имена, ",", Ложь));
-КонецПроцедуры
-
-Процедура Маска(Событие, ОписаниеБитов)
-	СпособПоСобытию.Вставить(Событие, "Маска");
-	Карта = Новый Соответствие;
-	Для Каждого Пара Из СтрРазделить(ОписаниеБитов, ",", Ложь) Цикл
-		Части = СтрРазделить(СокрЛП(Пара), "=", Ложь);
-		Карта.Вставить(Число(Части[0]), Части[1]);
-	КонецЦикла;
-	БитыПоСобытию.Вставить(Событие, Карта);
-КонецПроцедуры
-
-Процедура ПоОбразцу(Событие, Образец)
-	СпособПоСобытию.Вставить(Событие, СпособПоСобытию[Образец]);
-	Если СпособПоСобытию[Образец] = "Маска" Тогда
-		БитыПоСобытию.Вставить(Событие, БитыПоСобытию[Образец]);
-	Иначе
-		Поля.Вставить(Событие, Поля[Образец]);
-	КонецЕсли;
-КонецПроцедуры
-
 // BSLLS:DuplicateStringLiteral-off
-Процедура ЗаполнитьПоля() // BSLLS:MethodSize-off
+Процедура ЗаполнитьРеестр() // BSLLS:MethodSize-off
 
-	// --- проверено по .lgp + ВыгрузитьЖурналРегистрации (8.3.27) ---
+	Реестр = ЭтотОбъект;
+	Формы = Новый КонструкторыДанныхЖурналаРегистрации;
+	Агрегаты = Формы;
 
-	Маска("_$Access$_.Access", "0=Data");
-	Маска("_$InfoBase$_.PredefinedDataUpdate", "0=Data");
-	Маска("_$InfoBase$_.ExclusiveModeChange", "1=ExclusiveMode");
-	ПоОбразцу("_$InfoBase$_.ExclusiveModeChangeError", "_$InfoBase$_.ExclusiveModeChange");
+	Реестр.Событие("_$Access$_.Access")
 
-	Добавить("_$InfoBase$_.ConfigUpdate", "HashSum,Version");
-	Добавить("_$InfoBase$_.DBConfigUpdate", "Vendor,Version");
-	ПоОбразцу("_$InfoBase$_.ConfigUpdateError", "_$InfoBase$_.DBConfigUpdate");
-	ПоОбразцу("_$InfoBase$_.DBConfigBackgroundUpdateError", "_$InfoBase$_.DBConfigUpdate");
-	ПоОбразцу("_$InfoBase$_.DBConfigUpdateError", "_$InfoBase$_.DBConfigUpdate");
+		.Поле("Data").ТипПоля("Таблица").Бит(0)
 
-	Маска("_$Session$_.Authentication",
-		"0=OSUser,1=Name,2=CurrentOSUser,9=AuthenticationMode");
-	ПоОбразцу("_$Session$_.AuthenticationError", "_$Session$_.Authentication");
+		.Форма(Формы.ПоМаске("P", "1"))
+		.Зарегистрировать();
 
-	// P/65534: 27 позиций (без DefaultInterface). P/65535: +DefaultInterface после Roles.
-	// Имена — как в OneSTools.EventLog docs/events.md (проверено 8.3.27).
-	Добавить("_$User$_.Update",
-		"OSAuthentication,StandardAuthentication,CannotChangePassword,Name,Language,"
-		+ "PasswordChanged,PasswordIsSet,ShowInList,FullName,OSUser,RunMode,Roles,"
-		+ "OpenIDAuthentication,UnsafeOperationProtection,SecondAuthenticationFactorSettings,"
-		+ "SecondAuthenticationFactorSettingsProcessing,CannotRecoveryPassword,Email,"
-		+ "OpenIDConnectAuthentication,AccessTokenAuthentication,UserMatchingKeys,"
-		+ "PasswordPolicyName,PasswordSettingDate,PasswordHashAlgorithmType,"
-		+ "QRCodeAuthentication,PasswordDoesNotSatisfyRequirements,EmailAuthentication");
-	ПоОбразцу("_$User$_.New", "_$User$_.Update");
-	ПоОбразцу("_$User$_.NewError", "_$User$_.Update");
-	ПоОбразцу("_$User$_.UpdateError", "_$User$_.Update");
+	Реестр.Событие("_$Access$_.AccessDenied")
 
-	// --- черновик из СП UnloadEventLog (порядок хранения не сверен) ---
+		.Поле("Right").ТипПоля("Строка").Бит(0)
+		.Поле("Action").ТипПоля("Строка").Бит(1)
+		.Поле("Data").ТипПоля("Незаданное").Бит(2)
 
-	Добавить("_$Access$_.AccessDenied", "Right,Action,Data");
-	Добавить("_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
-		"PasswordRecoveryMethod,PasswordRecoveryURL,HelpURL,ShowHelpHyperlink,"
-		+ "VerificationCodeLength,"
-		+ "MaxUnsuccessfulVerificationCodeValidationAttemptsCount,"
-		+ "VerificationCodeRefreshRequestLockDuration,SMTPServerAddress,"
-		+ "SMTPUser,SMTPPasswordChanged,SMTPPort,PasswordRecoveryFrom,"
-		+ "SenderName,Header,HTMLMailText,SMTPPassword,UseSSL,"
-		+ "VerificationCodeEffectivePeriod,"
-		+ "PasswordRecoverySMTPSecureAuthenticationOnly,"
-		+ "PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode,"
-		+ "PasswordRecoveryAccessTokenChanged,"
-		+ "AllowSaveAuthenticationForReauthentication,"
-		+ "SaveAuthenticationForReauthenticationByDefault,"
-		+ "SavedAuthenticationLifeTime,AllowAutoSaveAuthentication,"
-		+ "AutoSaveAuthenticationByDefault,AutoSavedAuthenticationLifeTime,"
-		+ "UseStandardPasswordCompromiseCheckList,"
-		+ "UseSetPasswordCompromiseCheckList,UsePasswordCompromiseCheckService,"
-		+ "PasswordCompromiseCheckServiceURL,"
-		+ "PasswordCompromiseCheckServiceRequestTimeout,"
-		+ "IgnorePasswordCompromiseCheckServiceErrors,EmailAuthenticationMethod,"
-		+ "EmailAuthenticationVerificationCodeLength,"
-		+ "EmailAuthenticationMaxUnsuccessfulVerificationCodeValidationAttemptsCount,"
-		+ "EmailAuthenticationVerificationCodeRefreshRequestLockDuration,"
-		+ "EmailAuthenticationSMTPServerAddress,EmailAuthenticationSMTPUser,"
-		+ "EmailAuthenticationSMTPPasswordChanged,EmailAuthenticationSMTPPort,"
-		+ "EmailAuthenticationFrom,EmailAuthenticationSenderName,"
-		+ "EmailAuthenticationHeader,EmailAuthenticationHTMLMessageText,"
-		+ "EmailAuthenticationUseSSLWhenSendingVerificationCode,"
-		+ "EmailAuthenticationVerificationCodeEffectivePeriod,"
-		+ "EmailAuthenticationVerificationCodeAlphabet,"
-		+ "EmailAuthenticationSMTPSecureAuthenticationOnly,"
-		+ "EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode,"
-		+ "PasswordRecoveryAccessTokenChanged");
-	Добавить("_$InfoBase$_.AdministrationParametersChange",
-		"LockScheduledJobs,SessionsLockEnabled,LockBeginTime,LockEndTime,"
-		+ "ConfigurationUnloadDelayByWorkingProcessWithoutActiveUsers,"
-		+ "DisableLocalSpeechToText,InfoBaseID,Name,DataBaseName,"
-		+ "SessionStartPermissionCode,LanguageCode,"
-		+ "MaxScheduledJobsStartShiftWithoutActiveUsers,"
-		+ "MinScheduledJobsStartPeriodWithoutActiveUsers,"
-		+ "ExternalSessionManagementRequired,Description,LockParameter,"
-		+ "DatabaseUser,SecurityProfile,SafeModeSecurityProfile,"
-		+ "AllowLicenseDistribution,ReserveWorkingProcesses,DataBaseServer,"
-		+ "DateOffset,LockMessage,ExternalSessionManagementConnectionString,"
-		+ "DBMS,ConnectionsSecurityLevel");
-	Добавить("_$InfoBase$_.ConfigExtensionUpdate",
-		"Name,Vendor,Active,SafeMode,SecurityProfile,Version,"
-		+ "UnsafeActionProtection,UseDefaultRolesForAllUsers,"
-		+ "UsedInDistributedInfoBase,Purpose,Scope,DefaultRoles,Synonym,UUID,"
-		+ "HashSum");
-	ПоОбразцу("_$InfoBase$_.DBConfigExtensionDelete", "_$InfoBase$_.ConfigExtensionUpdate");
-	ПоОбразцу("_$InfoBase$_.DBConfigExtensionDeleteError", "_$InfoBase$_.ConfigExtensionUpdate");
-	ПоОбразцу("_$InfoBase$_.DBConfigExtensionInsert", "_$InfoBase$_.ConfigExtensionUpdate");
-	ПоОбразцу("_$InfoBase$_.DBConfigExtensionInsertError", "_$InfoBase$_.ConfigExtensionUpdate");
-	ПоОбразцу("_$InfoBase$_.DBConfigExtensionUpdate", "_$InfoBase$_.ConfigExtensionUpdate");
-	ПоОбразцу("_$InfoBase$_.DBConfigExtensionUpdateError", "_$InfoBase$_.ConfigExtensionUpdate");
-	Добавить("_$InfoBase$_.EventLogSettingsUpdateError", "Levels,SplitPeriod,EventLogFormat,EventName,EventIsLogged");
-	Добавить("_$InfoBase$_.PasswordCompromiseCheckListUpdate", "ValuesCountAfterUpdate");
-	Добавить("_$InfoBase$_.RegionalSettingsChange",
-		"UseCurrentSessionSettings,LocaleCode,FirstDayOfWeek,"
-		+ "BooleanTruePresentation,BooleanFalsePresentation,"
-		+ "NegativeNumberPresentation,NumbersDigitGroupSeparator,"
-		+ "NumbersDecimalSeparator,NumbersDigitGroupFormat,"
-		+ "TimePresentationFormat,DatePresentationFormat");
-	ПоОбразцу("_$InfoBase$_.RegionalSettingsChangeError", "_$InfoBase$_.RegionalSettingsChange");
-	Добавить("_$InfoBase$_.RoleUpdate",
-		"Rights,AccessDisabled,Restrictions,Updated,Removed,Added,"
-		+ "TemplateText,SetRightsForNewObjects,"
-		+ "SetRightsForAttributesAndTabularSectionsByDefault,"
-		+ "SubordinateObjectsHaveIndependentRights");
-	Добавить("_$InfoBase$_.SecondAuthenticationFactorTemplateDelete", "Name");
-	ПоОбразцу("_$InfoBase$_.SecondAuthenticationFactorTemplateNew", "_$InfoBase$_.SecondAuthenticationFactorTemplateDelete");
-	ПоОбразцу("_$InfoBase$_.SecondAuthenticationFactorTemplateUpdate", "_$InfoBase$_.SecondAuthenticationFactorTemplateDelete");
-	Добавить("_$InfoBase$_.SecurityProfileChange",
-		"ClusterAdministrator,SecurityProfile,ModulesAvailableForExtension,"
-		+ "Name,ModulesNotAvailableForExtension,Description,COMObjectFullAccess,"
-		+ "AddInFullAccess,ExternalModuleFullAccess,"
-		+ "ExternalApplicationsFullAccess,InternetResourcesFullAccess,"
-		+ "FileSystemFullAccess,FullPrivilegedMode,SafeModeProfile,"
-		+ "AllowExternalCodeExecutionInUnsafeMode,AllowAccessRightsExtension,"
-		+ "AccessRightsExtensionLimitingRoles,"
-		+ "AccessRightsExtensionLimitingRoles,AllowedAddIns,"
-		+ "AllowedExternalApplications,AllowedCOMClass,AllowedInternetResources,"
-		+ "AllowedExternalModules,AllowedVirtualDirectories");
-	Добавить("_$InfoBase$_.SessionLockChange", "KeyCode,End,Begin,Parameter,Message,Use");
-	ПоОбразцу("_$InfoBase$_.SessionLockChangeError", "_$InfoBase$_.SessionLockChange");
-	Добавить("_$InfoBase$_.UserPasswordPolicyDelete",
-		"Name,PasswordMaxEffectivePeriod,PasswordMinEffectivePeriod,"
-		+ "PasswordMinLength,PasswordReuseLimit,PasswordStrengthCheck,"
-		+ "PasswordExpirationNotificationPeriod");
-	ПоОбразцу("_$InfoBase$_.UserPasswordPolicyNew", "_$InfoBase$_.UserPasswordPolicyDelete");
-	ПоОбразцу("_$InfoBase$_.UserPasswordPolicyUpdate", "_$InfoBase$_.UserPasswordPolicyDelete");
-	Добавить("_$OpenIDProvider$_.NegativeAssertion", "RelyingPartyURL");
-	Добавить("_$OpenIDProvider$_.PositiveAssertion", "Name,RelyingPartyURL");
-	Добавить("_$Session$_.AddInAttach", "Location,Name,Type,AttachmentType");
-	ПоОбразцу("_$Session$_.AddInAttachError", "_$Session$_.AddInAttach");
-	Добавить("_$Session$_.AuthenticationFirstFactor", "Name,AuthenticationMode,CurrentOSUser");
-	Добавить("_$Session$_.ConfigExtensionApplyError", "Name");
-	Добавить("_$Session$_.ExternalDataProcessorConnect", "Path,Name,SafeMode,LanguageCode,UnsafeActionProtection,SecurityProfile");
-	ПоОбразцу("_$Session$_.ExternalDataProcessorConnectError", "_$Session$_.ExternalDataProcessorConnect");
-	ПоОбразцу("_$Session$_.ExternalReportConnect", "_$Session$_.ExternalDataProcessorConnect");
-	ПоОбразцу("_$Session$_.ExternalReportConnectError", "_$Session$_.ExternalReportConnect");
-	Добавить("_$Session$_.PasswordChangeError", "Name");
-	Добавить("_$Session$_.PasswordCompromiseCheckServiceErrorOnAuthentication", "Name");
-	Добавить("_$Session$_.PasswordRequirementsViolationOnAuthentication", "Name");
-	Добавить("_$User$_.AuthenticationLock", "Name");
-	Добавить("_$User$_.AuthenticationUnlock", "Name");
-	ПоОбразцу("_$User$_.AuthenticationUnlockError", "_$User$_.AuthenticationUnlock");
-	Добавить("_$User$_.Delete", "Name");
-	ПоОбразцу("_$User$_.DeleteError", "_$User$_.Delete");
-	Добавить("_$User$_.PermissionChange",
-		"Rights,AccessDisabled,Restrictions,Updated,Removed,Added,"
-		+ "TemplateText,Description");
+		.Форма(Формы.ПоМаске("P", "1"))
+		.Форма(Формы.ПоМаске("P", "6"))
+		.Зарегистрировать();
+
+	// Внутри P лежит именованная пара с таблицей; проверяем ее имя и размер.
+	Реестр.Событие("_$Data$_.DataHistorySettingsUpdate")
+		.Аналоги("_$Data$_.PredefinedDataInitialization,_$Data$_.UpdatePredefinedData,_$InfoBase$_.PredefinedDataUpdate")
+
+		.Поле("Data").ТипПоля("Таблица")
+
+		.Форма(
+			Формы.Структура("P")
+				.Размер(2)
+				.Литерал("0", "1")
+				.РазмерУзла("1", 2)
+				.Литерал("1.0", "Данные|Data|Ссылка|Reference")
+				.ПолеПоПути("Data", "1.1"))
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.AdditionalAuthenticationSettingsUpdate")
+
+		.Поле("VerificationCodeLength").ТипПоля("Число").Бит(2)
+		.Поле("Header").ТипПоля("Строка").Бит(9)
+		.Поле("ShowHelpHyperlink").ТипПоля("Булево").Бит(11)
+		.Поле("PasswordRecoveryMethod").ТипПоля("Число").Бит(0)
+			.Значение("0", "Переход по навигационной ссылке")
+			.Значение("1", "Отправка кода подтверждения через стандартный сервис")
+			.Значение("2", "Отправка кода подтверждения по заданным параметрам учетной записи")
+			.Значение("3", "Нет")
+		.Поле("PasswordRecoveryURL").ТипПоля("Строка").Бит(1)
+		.Поле("MaxUnsuccessfulVerificationCodeValidationAttemptsCount").ТипПоля("Число").Бит(3)
+		.Поле("SMTPServerAddress").ТипПоля("Строка").Бит(4)
+		.Поле("SMTPUser").ТипПоля("Строка").Бит(5)
+		.Поле("SMTPPasswordChanged").ТипПоля("Булево").Бит(6)
+		.Поле("SMTPPort").ТипПоля("Число").Бит(7)
+		.Поле("SenderName").ТипПоля("Строка").Бит(8)
+		.Поле("HTMLMessageText").ТипПоля("Строка").Бит(10)
+		.Поле("HelpURL").ТипПоля("Строка").Бит(12)
+		.Поле("VerificationCodeRefreshRequestLockDuration").ТипПоля("Число").Бит(13)
+		.Поле("UseSSL").ТипПоля("Булево").Бит(14)
+		.Поле("AllowAutoSaveAuthentication").ТипПоля("Булево").Бит(15)
+		.Поле("AutoSaveAuthenticationByDefault").ТипПоля("Булево").Бит(16)
+		.Поле("AutoSavedAuthenticationLifeTime").ТипПоля("Число").Бит(17)
+		.Поле("UseStandardPasswordCompromiseCheckList").ТипПоля("Булево").Бит(18)
+		.Поле("UseSpecifiedPasswordCompromiseCheckList").ТипПоля("Булево").Бит(19)
+		.Поле("UsePasswordCompromiseCheckService").ТипПоля("Булево").Бит(20)
+		.Поле("PasswordCompromiseCheckServiceURL").ТипПоля("Строка").Бит(21)
+		.Поле("PasswordCompromiseCheckServiceRequestTimeout").ТипПоля("Число").Бит(22)
+		.Поле("IgnorePasswordCompromiseCheckServiceErrors").ТипПоля("Булево").Бит(23)
+		.Поле("VerificationCodeEffectivePeriod").ТипПоля("Число").Бит(24)
+		.Поле("EmailAuthenticationMethod").ТипПоля("Число").Бит(25)
+			.Значение("1", "Отправка кода подтверждения через стандартный сервис")
+			.Значение("2", "Отправка кода подтверждения по заданным параметрам учетной записи")
+			.Значение("3", "Нет")
+		.Поле("EmailAuthenticationVerificationCodeLength").ТипПоля("Число").Бит(26)
+		.Поле("EmailAuthenticationMaxUnsuccessfulVerificationCodeValidationAttemptsCount").ТипПоля("Число").Бит(27)
+		.Поле("EmailAuthenticationSMTPServerAddress").ТипПоля("Строка").Бит(28)
+		.Поле("EmailAuthenticationSMTPUser").ТипПоля("Строка").Бит(29)
+		.Поле("EmailAuthenticationSMTPPasswordChanged").ТипПоля("Булево").Бит(30)
+		.Поле("EmailAuthenticationSMTPPort").ТипПоля("Число").Бит(31)
+		.Поле("EmailAuthenticationSenderName").ТипПоля("Строка").Бит(32)
+		.Поле("EmailAuthenticationHeader").ТипПоля("Строка").Бит(33)
+		.Поле("EmailAuthenticationHTMLMessageText").ТипПоля("Строка").Бит(34)
+		.Поле("EmailAuthenticationVerificationCodeRefreshRequestLockDuration").ТипПоля("Число").Бит(35)
+		.Поле("EmailAuthenticationUseSSLWhenSendingVerificationCode").ТипПоля("Булево").Бит(36)
+		.Поле("EmailAuthenticationVerificationCodeEffectivePeriod").ТипПоля("Число").Бит(37)
+		.Поле("PasswordRecoverySMTPSecureAuthenticationOnly").ТипПоля("Булево").Бит(39)
+		.Поле("PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode").ТипПоля("Число").Бит(40)
+			.Значение("0", "Не использовать")
+			.Значение("1", "Использовать")
+			.Значение("2", "Авто")
+		.Поле("PasswordRecoveryAccessTokenChanged").ТипПоля("Булево").Бит(41)
+		.Поле("EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode").ТипПоля("Число").Бит(43)
+			.Значение("0", "Не использовать")
+			.Значение("1", "Использовать")
+			.Значение("2", "Авто")
+		.Поле("EmailAuthenticationAccessTokenChanged").ТипПоля("Булево").Бит(44)
+		.Поле("PasswordRecoveryFrom").ТипПоля("Строка").Бит(45)
+		.Поле("EmailAuthenticationFrom").ТипПоля("Строка").Бит(46)
+
+		.Форма(Формы.ПоМаске("P", "2564"))
+		.Форма(Формы.ПоМаске("P", "1"))
+		.Форма(Формы.ПоМаске("P", "2"))
+		.Форма(Формы.ПоМаске("P", "4"))
+		.Форма(Формы.ПоМаске("P", "8"))
+		.Форма(Формы.ПоМаске("P", "16"))
+		.Форма(Формы.ПоМаске("P", "32"))
+		.Форма(Формы.ПоМаске("P", "64"))
+		.Форма(Формы.ПоМаске("P", "128"))
+		.Форма(Формы.ПоМаске("P", "256"))
+		.Форма(Формы.ПоМаске("P", "512"))
+		.Форма(Формы.ПоМаске("P", "1024"))
+		.Форма(Формы.ПоМаске("P", "2048"))
+		.Форма(Формы.ПоМаске("P", "4096"))
+		.Форма(Формы.ПоМаске("P", "8192"))
+		.Форма(Формы.ПоМаске("P", "16384"))
+		.Форма(Формы.ПоМаске("P", "32768"))
+		.Форма(Формы.ПоМаске("P", "65536"))
+		.Форма(Формы.ПоМаске("P", "131072"))
+		.Форма(Формы.ПоМаске("P", "262144"))
+		.Форма(Формы.ПоМаске("P", "524288"))
+		.Форма(Формы.ПоМаске("P", "1048576"))
+		.Форма(Формы.ПоМаске("P", "2097152"))
+		.Форма(Формы.ПоМаске("P", "4194304"))
+		.Форма(Формы.ПоМаске("P", "8388608"))
+		.Форма(Формы.ПоМаске("P", "16777216"))
+		.Форма(Формы.ПоМаске("P", "33554432"))
+		.Форма(Формы.ПоМаске("P", "67108864"))
+		.Форма(Формы.ПоМаске("P", "134217728"))
+		.Форма(Формы.ПоМаске("P", "268435456"))
+		.Форма(Формы.ПоМаске("P", "536870912"))
+		.Форма(Формы.ПоМаске("P", "1073741824"))
+		.Форма(Формы.ПоМаске("P", "2147483648"))
+		.Форма(Формы.ПоМаске("P", "4294967296"))
+		.Форма(Формы.ПоМаске("P", "8589934592"))
+		.Форма(Формы.ПоМаске("P", "17179869184"))
+		.Форма(Формы.ПоМаске("P", "34359738368"))
+		.Форма(Формы.ПоМаске("P", "68719476736"))
+		.Форма(Формы.ПоМаске("P", "137438953472"))
+		.Форма(Формы.ПоМаске("P", "549755813888"))
+		.Форма(Формы.ПоМаске("P", "1099511627776"))
+		.Форма(Формы.ПоМаске("P", "2199023255552"))
+		.Форма(Формы.ПоМаске("P", "8796093022208"))
+		.Форма(Формы.ПоМаске("P", "17592186044416"))
+		.Форма(Формы.ПоМаске("P", "35184372088832"))
+		.Форма(Формы.ПоМаске("P", "70368744177664"))
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.ConfigExtensionUpdate")
+		.Аналоги("_$InfoBase$_.DBConfigExtensionDelete,_$InfoBase$_.DBConfigExtensionDeleteError,
+			|_$InfoBase$_.DBConfigExtensionInsert,_$InfoBase$_.DBConfigExtensionInsertError,
+			|_$InfoBase$_.DBConfigExtensionUpdate,_$InfoBase$_.DBConfigExtensionUpdateError")
+
+		.Поле("Name").ТипПоля("Строка")
+		.Поле("Version").ТипПоля("Строка")
+		.Поле("Vendor").ТипПоля("Строка")
+		.Поле("UUID").ТипПоля("Строка")
+		.Поле("HashSum").ТипПоля("Строка")
+		.Поле("Synonym").ТипПоля("Строка")
+		.Поле("SafeMode").ТипПоля("Булево")
+		.Поле("SecurityProfile").ТипПоля("Строка")
+		.Поле("Active").ТипПоля("Булево")
+		.Поле("UnsafeOperationProtection").ТипПоля("Булево")
+		.Поле("Purpose").ТипПоля("Строка")
+		.Поле("UsedInDistributedInfoBase").ТипПоля("Булево")
+		.Поле("Scope").ТипПоля("Строка")
+		.Поле("DefaultRoles").ТипПоля("МассивСтрок").ЭлементыВыгрузки()
+		.Поле("UseDefaultRolesForAllUsers").ТипПоля("Булево")
+
+		.Форма(
+			Формы.Позиционная("P")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.ConfigUpdate")
+		.Аналоги("_$InfoBase$_.ConfigUpdateError,_$InfoBase$_.DBConfigUpdate,_$InfoBase$_.DBConfigUpdateError")
+
+		.Поле("Vendor").ТипПоля("Строка")
+		.Поле("Version").ТипПоля("Строка")
+
+		.Форма(
+			Формы.Позиционная("P")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.EventLogReduce")
+		.Аналоги("_$InfoBase$_.EventLogReduceError")
+
+		.Поле("Date").ТипПоля("Дата")
+
+		.Форма(
+			Формы.Позиционная("P")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.EventLogSettingsUpdate")
+		.Аналоги("_$InfoBase$_.EventLogSettingsUpdateError")
+
+		.Поле("EventName").ТипПоля("Строка").Бит(3)
+		.Поле("EventIsLogged").ТипПоля("Булево").Бит(4)
+		.Поле("Levels").ТипПоля("Число").Бит(0)
+			.Значение("0", "Примечание, Информация, Предупреждение, Ошибка")
+			.Значение("1", "Информация, Предупреждение, Ошибка")
+
+		.Форма(Формы.ПоМаске("P", "24"))
+		.Форма(Формы.ПоМаске("P", "1"))
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.ExclusiveModeChange")
+		.Аналоги("_$InfoBase$_.ExclusiveModeChangeError")
+
+		.Поле("ExclusiveMode").ТипПоля("Булево").Бит(1)
+
+		.Форма(Формы.ПоМаске("P", "2"))
+		.Зарегистрировать();
+
+	// Конверт этого семейства сохраняется как часть существующего контракта JSON.
+	Реестр.Событие("_$InfoBase$_.ParametersUpdate")
+		.Аналоги("_$InfoBase$_.ParametersUpdateError")
+
+		.ФорматJSON("ПозиционныйКонверт")
+
+		.Поле("MaxUnsuccessfulAttemptsCount").ТипПоля("Число").Бит(6)
+		.Поле("LockDuration").ТипПоля("Число").Бит(7)
+		.Поле("UserNameAdditionCodes").ТипПоля("Строка").Бит(8)
+		.Поле("UserPasswordStrengthCheck").ТипПоля("Число").Бит(2)
+			.Значение("0", "false")
+			.Значение("3", "true")
+		.Поле("ActionOnUserPasswordRequirementsViolationOnAuthentication").ТипПоля("Число").Бит(15)
+			.Значение("0", "Потребовать смену пароля")
+			.Значение("1", "Предложить смену пароля")
+			.Значение("2", "Нет")
+		.Поле("LockWaitTime").ТипПоля("Число").Бит(0)
+		.Поле("UserPasswordMinLength").ТипПоля("Число").Бит(1)
+		.Поле("PassiveSessionHibernateTime").ТипПоля("Число").Бит(3)
+		.Поле("HibernateSessionTerminateTime").ТипПоля("Число").Бит(4)
+		.Поле("UserPasswordMinEffectivePeriod").ТипПоля("Число").Бит(9)
+		.Поле("UserPasswordMaxEffectivePeriod").ТипПоля("Число").Бит(10)
+		.Поле("UserPasswordReuseLimit").ТипПоля("Число").Бит(11)
+		.Поле("UserPasswordExpirationNotificationPeriod").ТипПоля("Число").Бит(12)
+		.Поле("UserPasswordHashAlgorithmType").ТипПоля("Строка").Бит(13)
+		.Поле("UserPasswordCompromiseCheck").ТипПоля("Булево").Бит(14)
+		.Поле("InactivityTimeForTerminateSessionNotification").ТипПоля("Число").Бит(16)
+		.Поле("InactivityTimeForTerminateSession").ТипПоля("Число").Бит(17)
+
+		.Форма(Формы.ПоМаске("P", "448"))
+		.Форма(Формы.ПоМаске("P", "192"))
+		.Форма(Формы.ПоМаске("P", "320"))
+		.Форма(Формы.ПоМаске("P", "384"))
+		.Форма(Формы.ПоМаске("P", "4"))
+		.Форма(Формы.ПоМаске("P", "32768"))
+		.Форма(Формы.ПоМаске("P", "1"))
+		.Форма(Формы.ПоМаске("P", "2"))
+		.Форма(Формы.ПоМаске("P", "8"))
+		.Форма(Формы.ПоМаске("P", "16"))
+		.Форма(Формы.ПоМаске("P", "64"))
+		.Форма(Формы.ПоМаске("P", "128"))
+		.Форма(Формы.ПоМаске("P", "256"))
+		.Форма(Формы.ПоМаске("P", "512"))
+		.Форма(Формы.ПоМаске("P", "1024"))
+		.Форма(Формы.ПоМаске("P", "2048"))
+		.Форма(Формы.ПоМаске("P", "4096"))
+		.Форма(Формы.ПоМаске("P", "8192"))
+		.Форма(Формы.ПоМаске("P", "16384"))
+		.Форма(Формы.ПоМаске("P", "65536"))
+		.Форма(Формы.ПоМаске("P", "131072"))
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.RegionalSettingsChange")
+
+		.Поле("LocaleCode").ТипПоля("Строка")
+		.Поле("UseCurrentSessionSettings").ТипПоля("Булево")
+		.Поле("NumbersDecimalSeparator").ТипПоля("Строка")
+		.Поле("NumbersDigitGroupSeparator").ТипПоля("Строка")
+		.Поле("NumbersDigitGroupFormat").ТипПоля("Строка")
+		.Поле("NegativeNumberPresentation").ТипПоля("Число")
+		.Поле("BooleanFalsePresentation").ТипПоля("Строка")
+		.Поле("BooleanTruePresentation").ТипПоля("Строка")
+		.Поле("DatePresentationFormat").ТипПоля("Строка")
+		.Поле("TimePresentationFormat").ТипПоля("Строка")
+		.Поле("FirstDayOfWeek").ТипПоля("Число")
+
+		.Форма(
+			Формы.Позиционная("P")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.SecondAuthenticationFactorTemplateDelete")
+		.Аналоги("_$InfoBase$_.SecondAuthenticationFactorTemplateNew,_$InfoBase$_.SecondAuthenticationFactorTemplateUpdate,_$Session$_.PasswordRequirementsViolationOnAuthentication,_$User$_.AuthenticationLock,_$User$_.AuthenticationUnlock,_$User$_.AuthenticationUnlockError")
+
+		.Поле("Name").ТипПоля("Строка")
+
+		.Форма(
+			Формы.Структура("P")
+				.Размер(2)
+				.Литерал("0", "1")
+				.РазмерУзла("1", 2)
+				.Литерал("1.0", "Имя|Name")
+				.ПолеПоПути("Name", "1.1"))
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.SessionLockChange")
+		.Аналоги("_$InfoBase$_.SessionLockChangeError")
+
+		.Поле("Use").ТипПоля("Булево")
+		.Поле("Begin").ТипПоля("Дата")
+		.Поле("End").ТипПоля("Дата")
+		.Поле("Message").ТипПоля("Строка")
+		.Поле("KeyCode").ТипПоля("Строка")
+		.Поле("Parameter").ТипПоля("Строка")
+
+		.Форма(
+			Формы.Позиционная("P")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.UserPasswordPolicyDelete")
+		.Аналоги("_$InfoBase$_.UserPasswordPolicyDeleteError,_$Session$_.ConfigExtensionApplyError,_$User$_.Delete,_$User$_.DeleteError")
+
+		.Поле("Name").ТипПоля("Строка")
+
+		.Форма(
+			Формы.Позиционная("P")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	Реестр.Событие("_$InfoBase$_.UserPasswordPolicyNew")
+		.Аналоги("_$InfoBase$_.UserPasswordPolicyNewError,_$InfoBase$_.UserPasswordPolicyUpdate")
+
+		.ФорматJSON("ПозиционныйКонверт")
+
+		.Поле("Name").ТипПоля("Строка")
+		.Поле("PasswordMaxEffectivePeriod").ТипПоля("Число")
+		.Поле("PasswordMinEffectivePeriod").ТипПоля("Число")
+		.Поле("PasswordMinLength").ТипПоля("Число")
+		.Поле("PasswordReuseLimit").ТипПоля("Число")
+		.Поле("PasswordStrengthCheck").ТипПоля("Булево")
+		.Поле("PasswordExpirationNotificationPeriod").ТипПоля("Число")
+		.Поле("PasswordCompromiseCheck").ТипПоля("Булево")
+		.Поле("ActionOnPasswordRequirementsViolationOnAuthenticationCode").ТипПоля("Число")
+
+		.Форма(
+			Формы.Позиционная("P", "255")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	Реестр.Событие("_$Session$_.AddInAttach")
+		.Аналоги("_$Session$_.AddInAttachError")
+
+		.Поле("Name").ТипПоля("Строка")
+		.Поле("Location").ТипПоля("Строка")
+		.Поле("Type").ТипПоля("Незаданное")
+		.Поле("AttachmentType").ТипПоля("Незаданное")
+
+		.Форма(
+			Формы.Позиционная("P")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	Реестр.Событие("_$Session$_.Authentication")
+		.Аналоги("_$Session$_.AuthenticationError")
+
+		.Поле("Name").ТипПоля("Строка").Бит(1)
+		.Поле("CurrentOSUser").ТипПоля("Строка").Бит(2)
+		.Поле("AuthenticationMethod").ТипПоля("Число").Бит(9)
+		.Поле("OSUser").ТипПоля("Строка").Бит(0)
+
+		.Форма(Формы.ПоМаске("P", "518"))
+		.Форма(Формы.ПоМаске("P", "514"))
+		.Форма(Формы.ПоМаске("P", "513"))
+		.Зарегистрировать();
+
+	Реестр.Событие("_$Session$_.ExternalDataProcessorConnect")
+		.Аналоги("_$Session$_.ExternalDataProcessorConnectError,
+			|_$Session$_.ExternalReportConnect,_$Session$_.ExternalReportConnectError")
+
+		.Поле("Path").ТипПоля("Строка")
+		.Поле("Name").ТипПоля("Строка")
+		.Поле("SafeMode").ТипПоля("Булево")
+		.Поле("SecurityProfile").ТипПоля("Строка")
+		.Поле("UnsafeOperationProtection").ТипПоля("Булево")
+		.Поле("LanguageCode").ТипПоля("Строка")
+
+		.Форма(
+			Формы.Позиционная("P")
+				.ВсеПоля())
+		.Зарегистрировать();
+
+	// 65534 и 65535 здесь точные маркеры форм, а не маски отдельных полей.
+	// В старой форме физически нет DefaultInterface; остальные позиции сдвинуты.
+	Реестр.Событие("_$User$_.Update")
+		.Аналоги("_$User$_.New,_$User$_.NewError,_$User$_.UpdateError")
+
+		.Поле("OSAuthentication").ТипПоля("Булево")
+		.Поле("StandardAuthentication").ТипПоля("Булево")
+		.Поле("CannotChangePassword").ТипПоля("Булево")
+		.Поле("Name").ТипПоля("Строка")
+		.Поле("Language").ТипПоля("Ссылка")
+		.Поле("PasswordChanged").ТипПоля("Булево")
+		.Поле("PasswordIsSet").ТипПоля("Булево")
+		.Поле("ShowInList").ТипПоля("Булево")
+		.Поле("FullName").ТипПоля("Строка")
+		.Поле("OSUser").ТипПоля("Строка")
+		.Поле("RunMode").ТипПоля("Строка")
+
+		// Полный массив проверяется, но в телеметрию попадает только количество.
+		.Поле("Roles").ТипПоля("МассивСсылок").Как("RolesCount", Агрегаты.Количество())
+		.Поле("DefaultInterface").ТипПоля("Ссылка")
+
+		.Поле("OpenIDAuthentication").ТипПоля("Булево")
+		.Поле("UnsafeOperationProtection").ТипПоля("Булево")
+		.Поле("SecondAuthenticationFactorSettings").ТипПоля("МассивСтрок")
+		.Поле("SecondAuthenticationFactorSettingsProcessing").ТипПоля("Строка")
+		.Поле("CannotRecoveryPassword").ТипПоля("Булево")
+		.Поле("Email").ТипПоля("Строка")
+		.Поле("OpenIDConnectAuthentication").ТипПоля("Булево")
+		.Поле("AccessTokenAuthentication").ТипПоля("Булево")
+		.Поле("UserMatchingKeys").ТипПоля("МассивСтрок")
+		.Поле("PasswordPolicyName").ТипПоля("Строка")
+		.Поле("PasswordSettingDate").ТипПоля("Дата")
+		.Поле("PasswordHashAlgorithmType").ТипПоля("Строка")
+		.Поле("QRCodeAuthentication").ТипПоля("Булево")
+		.Поле("PasswordDoesNotSatisfyRequirements").ТипПоля("Булево")
+		.Поле("EmailAuthentication").ТипПоля("Булево")
+
+		.Форма(
+			Формы.Позиционная("P", "65534")
+				.ВсеПоляКроме("DefaultInterface"))
+		.Форма(
+			Формы.Позиционная("P", "65535")
+				.ВсеПоля())
+		.Зарегистрировать();
+
 КонецПроцедуры
 // BSLLS:DuplicateStringLiteral-on
 
@@ -255,8 +615,9 @@
 
 &Желудь
 Процедура ПриСозданииОбъекта()
-	Поля = Новый Соответствие;
-	БитыПоСобытию = Новый Соответствие;
-	СпособПоСобытию = Новый Соответствие;
-	ЗаполнитьПоля();
+
+	Описания = Новый Соответствие;
+	Семейства = Новый Массив;
+	ЗаполнитьРеестр();
+
 КонецПроцедуры
