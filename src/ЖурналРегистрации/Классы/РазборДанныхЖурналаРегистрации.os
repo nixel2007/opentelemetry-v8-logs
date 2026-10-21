@@ -1,9 +1,8 @@
 ﻿#native
 
 // Подтвержденные формы Data из 1С 8.3.27.2325. Порядок полей LGP отличается от СП.
-// Перенос StructuredEventData/PositionalEventData из OneSTools.EventLog (MIT),
+// Правила сверены с C#-декодерами, разработанными в APonkratov/OneSTools.EventLog:
 // https://github.com/APonkratov/OneSTools.EventLog/tree/015d838
-// Copyright (c) 2020 Akpaev Evgeny. Условия лицензии: LICENSE.onestools.md.
 // Неподтвержденная маска, число или тип полей сохраняются полным деревом.
 
 Перем Формы; // Соответствие: событие -> массив подтвержденных форм
