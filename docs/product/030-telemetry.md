@@ -179,3 +179,127 @@ Loki делает индексируемыми метками только ат�
 | Метрика | Тип | Атрибуты |
 |---------|-----|----------|
 | `v8.eventlog.records` | счетчик | `v8.eventlog.event`, `v8.eventlog.severity`, `v8.infobase.name`, `v8.eventlog.application` |
+
+## Кластер
+
+Показатели кластера снимаются с сервера администрирования `ras` с периодом `otel.v8-logs.cluster.interval`
+и отдаются наблюдаемыми датчиками (область инструментирования `opentelemetry-v8-logs.cluster`): каждый
+экспорт метрик (`otel.metric.export.interval`) отдает значения последнего снимка. Все метрики - gauge.
+Опрашиваются все кластеры агента, кластер различается атрибутом `v8.cluster.name`.
+
+### Ресурс
+
+| Атрибут ресурса | Значение |
+|-----------------|----------|
+| `service.name` | `otel.v8-logs.cluster.service-name`, по умолчанию `otel.v8-logs.service.name` |
+| атрибуты из `otel.v8-logs.resource.attributes` | как заданы |
+
+`v8.infobase.name` в ресурсе метрик кластера нет: один снимок охватывает все базы кластера, и база -
+атрибут точки.
+
+### Метрики
+
+| Метрика | Единица | Значение | Атрибуты |
+|---------|---------|----------|----------|
+| `v8.cluster.up` | - | 1 - последний опрос удался, 0 - нет. При 0 остальные метрики не отдаются | - |
+| `v8.cluster.sessions` | `{session}` | число сеансов | `v8.cluster.name`, `v8.infobase.name`, `v8.session.app_id` (приложение сеанса: `1CV8C`, `WebClient`, `BackgroundJob`...), `host.name` рабочего процесса сеанса |
+| `v8.cluster.sessions.blocked` | `{session}` | число сеансов, ожидающих блокировку | `v8.cluster.name`, `v8.infobase.name`, `v8.block.kind`: `db` - блокировка СУБД, `lock` - управляемая |
+| `v8.cluster.sessions.memory.usage` | `By` | текущая память сеансов | разрез сеансов: `v8.cluster.name`, `v8.infobase.name`, `v8.session.app_id`, `user.name` |
+| `v8.cluster.sessions.cpu_time` | `s` | процессорное время сеансов с их начала | разрез сеансов |
+| `v8.cluster.sessions.calls` | `{call}` | число вызовов сеансов с их начала | разрез сеансов |
+| `v8.cluster.sessions.call.duration` | `s` | длительность вызовов сеансов с их начала | разрез сеансов и `v8.call.kind`: `call` - все вызовы, `db` - вызовы СУБД |
+| `v8.cluster.sessions.io` | `By` | объем чтения и записи сеансов с их начала | разрез сеансов и `v8.io.direction`: `read`, `write` |
+| `v8.cluster.sessions.long_calls` | `{session}` | число сеансов, текущий вызов которых длится не меньше порога | разрез сеансов и `v8.duration.threshold` - порог в секундах (число); точка на каждый порог, в том числе нулевая |
+| `v8.cluster.infobase.scheduled_jobs_denied` | - | 1 - регламентные задания базы заблокированы, 0 - нет | `v8.cluster.name`, `v8.infobase.name`; только для баз, учетные данные которых заданы в настройках |
+| `v8.cluster.infobase.sessions_denied` | - | 1 - начало сеансов базы заблокировано, 0 - нет | те же |
+| `v8.cluster.connections` | `{connection}` | число соединений | `v8.cluster.name`, `v8.infobase.name`, `host.name`, `process.pid`, `v8.connection.app_id` (приложение соединения) |
+| `v8.cluster.processes` | `{process}` | число рабочих процессов | `v8.cluster.name`, `host.name`, `v8.process.running`, `v8.process.enabled` (булевы) |
+| `v8.cluster.process.memory.usage` | `By` | память рабочего процесса | `v8.cluster.name`, `host.name`, `process.pid` |
+| `v8.cluster.process.connections` | `{connection}` | число соединений рабочего процесса | те же |
+| `v8.cluster.process.available_performance` | - | доступная производительность рабочего процесса (безразмерная оценка кластера) | те же |
+| `v8.cluster.process.call.duration.avg` | `s` | средняя длительность вызовов рабочего процесса | те же и `v8.call.kind`: `call` - вызов, `db` - вызов СУБД, `lock` - ожидание блокировки, `server` - серверный вызов, `back` - обратный вызов |
+| `v8.cluster.licenses.used` | `{session}` | число сеансов с лицензией серии | `v8.cluster.name`, `v8.license.series`, `v8.license.server` (адрес менеджера, выдавшего лицензию, - только у лицензий, выданных сервером), `v8.license.type` (числовой код типа лицензии, как его отдает `ras`) |
+| `v8.cluster.licenses.total` | `{user}` | число пользователей, допустимое лицензией серии | те же |
+
+В Prometheus (OTLP-экспортер коллектора с суффиксами единиц) метрики получают имена `v8_cluster_sessions`,
+`v8_cluster_process_memory_usage_bytes`, `v8_cluster_process_call_duration_avg_seconds`,
+`v8_cluster_sessions_cpu_time_seconds`: счётные единицы в фигурных скобках и пустая единица суффикса не добавляют.
+
+Метрики сеансов «с их начала» - суммы накопленных показателей сеансов, существующих на момент снимка: при
+завершении сеанса сумма уменьшается, поэтому это gauge, а не счетчик. Скорость роста (`deriv`, `delta`) имеет
+смысл на интервалах без массового завершения сеансов.
+
+`host.name` и `process.pid` - рабочий сервер и PID рабочего процесса `rphost`, как их видит кластер;
+у соединения и сеанса они берутся от его рабочего процесса. Пустые значения атрибутов не передаются: сеанс без
+базы уходит без `v8.infobase.name`, сеанс без рабочего процесса - без `host.name`, лицензия без серии - без
+`v8.license.series`.
+
+Пороги долгих вызовов и учетные данные баз задаются в настройках кластера (см. [конфигурацию](020-configuration.md)).
+
+### Снимки сеансов
+
+Каждый опрос кластера дает по записи лога на каждый сеанс (область инструментирования
+`opentelemetry-v8-logs.cluster`): по ним видно, какой сеанс сколько памяти, времени и ввода-вывода занимал
+в момент опроса, - то, чего нет в метриках, атрибуты которых ограничены конечными множествами.
+Ресурс записи - `service.name` метрик кластера и `v8.infobase.name` базы сеанса (сеанс без базы - без него),
+поэтому в Loki база - индексируемая метка `v8_infobase_name`. Недоступный кластер записей не дает.
+
+| Поле | Значение |
+|------|----------|
+| Время | момент снимка |
+| Тело | `Сеанс <номер> <приложение> <пользователь>`, пустые части пропускаются: `Сеанс 1022 1CV8C Иванов` |
+| Серьезность | `INFO` |
+| `v8.cluster.name` | имя кластера |
+| `v8.infobase.name` | имя информационной базы - в ресурсе записи, не в атрибутах |
+| `v8.session.id` | номер сеанса (число) |
+| `v8.session.app_id` | приложение сеанса |
+| `user.name` | имя пользователя |
+| `host.name`, `process.pid` | рабочий сервер и PID рабочего процесса сеанса |
+| `v8.session.client.host` | компьютер клиента |
+| `client.address` | адрес клиента |
+| `v8.session.started_at`, `v8.session.last_active_at` | начало и последняя активность, `yyyy-MM-ddTHH:mm:ss` |
+| `v8.session.hibernated` | сеанс спит (булево) |
+| `v8.session.blocked.db`, `v8.session.blocked.lock` | номер сеанса, который блокирует этот сеанс: в СУБД и управляемой блокировкой; 0 - не заблокирован |
+| `v8.session.memory.current`, `.last5min`, `.total` | память, байты: текущий вызов, за 5 минут, с начала сеанса |
+| `v8.session.read.current`, `.last5min`, `.total` | чтение, байты |
+| `v8.session.write.current`, `.last5min`, `.total` | запись, байты |
+| `v8.session.duration.current`, `.last5min`, `.total` | длительность вызовов, мс |
+| `v8.session.duration.dbms.current`, `.last5min`, `.total` | длительность вызовов СУБД, мс |
+| `v8.session.cpu_time.current`, `.last5min`, `.total` | процессорное время, мс |
+| `v8.session.calls.total`, `.last5min` | число вызовов |
+| `v8.session.bytes.total`, `.last5min` | объем данных, переданных между клиентом и сервером, байты |
+| `v8.session.dbms_bytes.total`, `.last5min` | объем данных, переданных между сервером и СУБД, байты |
+| `v8.session.current_service` | текущий сервис сеанса |
+| `v8.session.data_separation` | разделение данных сеанса |
+| `v8.session.license.series` | серии лицензий сеанса через запятую |
+
+Числовые атрибуты передаются всегда, строковые - только непустые. Ключи атрибутов - латиницей, в Loki они
+становятся структурированными метаданными (`v8_session_memory_current`).
+
+```logql
+# память сеанса 1022 базы erp
+max_over_time({service_name="<сервис>", v8_infobase_name="erp"} | scope_name="opentelemetry-v8-logs.cluster" | v8_session_id="1022" | unwrap v8_session_memory_current [5m])
+# 10 сеансов с наибольшей памятью
+topk(10, max by (v8_infobase_name, v8_session_id, user_name) (max_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | unwrap v8_session_memory_current [5m])))
+```
+
+### Связь с трассами технологического журнала
+
+Общие ключи метрик кластера и спанов технологического журнала:
+
+- `v8.infobase.name` - у спанов атрибут ресурса (`p:processName` события), у метрик сеансов и соединений -
+  атрибут точки;
+- `process.pid` - у спанов PID из имени каталога или файла журнала (`rphost_1234`), у метрик соединений
+  и рабочих процессов - PID процесса в кластере;
+- `host.name` - у метрик процессов имя рабочего сервера; чтобы он был и у спанов, задайте его в
+  `otel.v8-logs.resource.attributes` (`host.name=<имя сервера как в кластере>`) коллектора, читающего журналы
+  этого сервера.
+
+Так всплеск `v8.techlog.event.duration` базы или процесса кладется на одну шкалу с числом сеансов, соединений
+и памятью того же процесса: метрики и трассы фильтруются одинаковыми значениями `v8_infobase_name`,
+`process_pid`, `host_name`.
+
+Идентификаторов сеансов и соединений и адресов клиентов в атрибутах метрик нет намеренно: атрибуты метрик
+ограничены конечными множествами (кластер, база, приложение, пользователь, рабочий сервер, процесс,
+серия лицензии). Пользователь - самое широкое из них: число рядов `v8.cluster.sessions.*` растет как
+пользователи × приложения × пороги долгих вызовов, у SDK предел 2000 рядов на инструмент. Показатели отдельных сеансов - в [снимках сеансов](#снимки-сеансов).
