@@ -27,7 +27,13 @@
       ],
       "eventlog": [
         { "path": "/home/usr1cv8/.1cv8/1C/1cv8/reg_1541/00000000-0000-0000-0000-000000000000/1Cv8Log", "infobase": "erp", "service-name": "erp" }
-      ]
+      ],
+      "cluster": {
+        "ras": "", "user": "", "password": "", "interval": 30,
+        "long-call-thresholds": "60,3600",
+        "infobases": [],
+        "session-log": true
+      }
     }
   },
   "logos": {
