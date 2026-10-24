@@ -16,6 +16,7 @@ title: Состав телеметрии
 | `service.name` | `otel.v8-logs.service.name` или `service-name` источника |
 | `v8.infobase.name` | информационная база: для журнала регистрации - `infobase` источника; для технологического журнала - свойство события `p:processName`, а если оно пустое - `infobase` источника |
 | атрибуты из `otel.v8-logs.resource.attributes` | как заданы |
+| `telemetry.sdk.name`, `telemetry.sdk.language`, `telemetry.sdk.version` | SDK, который отправил данные: `oscript-opentelemetry`, `oscript`, версия SDK |
 
 Loki делает индексируемыми метками только атрибуты ресурса из своего списка (`service.name`
 и другие, см. [документацию Loki](https://grafana.com/docs/loki/latest/send-data/otel/)), остальные

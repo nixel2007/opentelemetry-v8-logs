@@ -12,7 +12,8 @@ title: Настройка
 
 - собственные логи и метрики коллектора - под `otel.service.name`, с атрибутами хоста и процесса коллектора;
 - данные журналов - под `otel.v8-logs.service.name` (или `service-name` источника), с атрибутами
-  из `otel.v8-logs.resource.attributes` и без атрибутов процесса коллектора.
+  из `otel.v8-logs.resource.attributes` и атрибутами SDK `telemetry.sdk.*`, без атрибутов хоста и
+  процесса коллектора.
 
 ```json
 {
