@@ -45,7 +45,7 @@ Grafana будет доступна на http://localhost:3000: дашборд �
 администрирования в `otel.v8-logs.cluster.ras` (`localhost:1545`) в `autumn-properties.json`.
 Вместе с ними в Loki идут снимки сеансов - запись на сеанс за опрос в области `opentelemetry-v8-logs.cluster`
 (память, вызовы, время в СУБД, пользователь, приложение), а метрики `v8_cluster_sessions_*` дают агрегаты по
-пользователю и приложению.
+базе и приложению.
 
 Подробнее - в [документации](docs/product/010-index.md): [настройка](docs/product/020-configuration.md),
 [состав телеметрии](docs/product/030-telemetry.md).
