@@ -22,7 +22,6 @@
       },
       "timezone": "Europe/Moscow",
       "start-from-end": false,
-      "returned-rows": { "enabled": true },
       "techlog": [
         { "path": "/var/log/1c/techlog" }
       ],

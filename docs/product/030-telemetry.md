@@ -44,8 +44,10 @@ Loki делает индексируемыми метками только ат�
 | `v8.techlog.<свойство>` | свойства события как есть: `v8.techlog.Usr`, `v8.techlog.t:clientID`, `v8.techlog.Sql`...; повторяющиеся свойства - массивом |
 | `process.executable.name`, `process.pid` | процесс и PID из имени каталога или файла |
 | `log.file.path` | путь к файлу журнала |
+| `user.name` | пользователь из свойства `Usr` |
+| `session.id` | номер сеанса из свойства `SessionID`; настройка `otel.v8-logs.session-id.enabled` |
 | `db.system.name`, `db.namespace`, `server.address` | у событий СУБД, см. [трассы](./telemetry.md#трассы) |
-| `db.response.returned_rows` | у событий СУБД с настройкой `otel.v8-logs.returned-rows.enabled`: число строк результата из свойства `Rows`. Платформа пишет `Rows` только у запросов, которые возвращают строки; у изменяющих запросов его нет, число изменённых строк - в `RowsAffected` |
+| `db.response.returned_rows` | у событий СУБД, настройка `otel.v8-logs.returned-rows.enabled`: число строк результата из свойства `Rows`. Платформа пишет `Rows` только у запросов, которые возвращают строки; у изменяющих запросов его нет, число изменённых строк - в `RowsAffected` |
 | `code.stacktrace`, `code.file.path`, `code.line.number`, `code.function.name` | место в коде из свойства `Context`, см. [место в коде](./telemetry.md#место-в-коде) |
 
 Запись лога и спан события получают один набор атрибутов: атрибуты раскладываются один раз на событие.
@@ -247,7 +249,7 @@ Loki делает индексируемыми метками только ат�
 | Событие | Спан |
 |---------|------|
 | `CALL` | вид `SERVER` |
-| `DBMSSQL`, `DBPOSTGRS`, `DBORACLE`, `DB2`, `DBV8DBEng` | вид `CLIENT`, `db.system.name`, `db.namespace`, `server.address`, по настройке `db.response.returned_rows`; у файловой базы (`DBV8DBEng`) своего значения `db.system.name` в семантических соглашениях нет, используется `1c.v8dbeng` |
+| `DBMSSQL`, `DBPOSTGRS`, `DBORACLE`, `DB2`, `DBV8DBEng` | вид `CLIENT`, `db.system.name`, `db.namespace`, `server.address`, `db.response.returned_rows`; у файловой базы (`DBV8DBEng`) своего значения `db.system.name` в семантических соглашениях нет, используется `1c.v8dbeng` |
 | `EXCP` | вид `INTERNAL`, статус `ERROR` с описанием из `Descr`, событие спана `exception` |
 | остальные | вид `INTERNAL` |
 
@@ -303,6 +305,7 @@ Loki делает индексируемыми метками только ат�
 | `user.name`, `user.id` | имя и идентификатор пользователя |
 | `v8.eventlog.computer`, `v8.eventlog.application` | компьютер и приложение |
 | `v8.eventlog.connection`, `v8.eventlog.session` | соединение и сеанс |
+| `session.id` | номер сеанса; настройка `otel.v8-logs.session-id.enabled` |
 | `v8.eventlog.transaction.status` | `committed` (код `C`), `rolled_back` (код `R`): в журналах с этими кодами записаны события `_$Transaction$_.Commit` и `Rollback` |
 | `v8.eventlog.transaction.status_code` | код статуса транзакции как есть: `C`, `R`, `U` (у изменений данных внутри транзакции; значение не расшифровывается) |
 | `v8.eventlog.transaction.id` | номер транзакции |
