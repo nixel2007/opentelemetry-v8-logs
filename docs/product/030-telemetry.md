@@ -47,6 +47,7 @@ Loki делает индексируемыми метками только ат�
 | `user.name` | пользователь из свойства `Usr` |
 | `client.address` | компьютер клиента из свойства `t:computerName`; у фоновых и регламентных заданий - сам сервер |
 | `rpc.system.name`, `rpc.method` | у `CALL` и `SCALL` с `IName` и `MName`: `1c.v8` и `<IName>/<MName>`, например `IVResourceRemoteConnection/send`; своего значения `rpc.system.name` для 1С в семантических соглашениях нет |
+| `error.type` | `_OTHER` у вызова, завершившегося исключением для клиента (свойство `RetExcp`): типа исключения в событии нет |
 | `session.id` | номер сеанса из свойства `SessionID`; настройка `otel.v8-logs.session-id.enabled` |
 | `db.system.name`, `db.namespace`, `server.address` | у событий СУБД, см. [трассы](./telemetry.md#трассы) |
 | `db.response.returned_rows` | у событий СУБД, настройка `otel.v8-logs.returned-rows.enabled`: число строк результата из свойства `Rows`. Платформа пишет `Rows` только у запросов, которые возвращают строки; у изменяющих запросов его нет, число изменённых строк - в `RowsAffected` |
@@ -174,8 +175,8 @@ Loki делает индексируемыми метками только ат�
 |---------|-----|----------|
 | `v8.techlog.event.duration`, с | гистограмма | `v8.techlog.event.name`, `process.executable.name`, `v8.infobase.name` |
 | `db.client.operation.duration`, с | гистограмма | `db.system.name`, `db.namespace`, `server.address` |
-| `rpc.server.call.duration`, с | гистограмма | `rpc.system.name`, `rpc.method` |
-| `rpc.client.call.duration`, с | гистограмма | `rpc.system.name`, `rpc.method` |
+| `rpc.server.call.duration`, с | гистограмма | `rpc.system.name`, `rpc.method`, `error.type` |
+| `rpc.client.call.duration`, с | гистограмма | `rpc.system.name`, `rpc.method`, `error.type` |
 
 `db.client.operation.duration` - метрика семантических соглашений: длительность событий СУБД
 (`DBMSSQL`, `DBPOSTGRS`, `DBORACLE`, `DB2`, `DBV8DBEng`) с границами бакетов из семантических
@@ -256,7 +257,7 @@ Loki делает индексируемыми метками только ат�
 
 | Событие | Спан |
 |---------|------|
-| `CALL` | вид `SERVER`; с `IName` и `MName` - `rpc.system.name` и `rpc.method` |
+| `CALL` | вид `SERVER`; с `IName` и `MName` - `rpc.system.name` и `rpc.method`; с `RetExcp` - статус `ERROR` с описанием из `RetExcp` и `error.type` |
 | `SCALL` | вид `CLIENT`; с `IName` и `MName` - `rpc.system.name` и `rpc.method` |
 | `DBMSSQL`, `DBPOSTGRS`, `DBORACLE`, `DB2`, `DBV8DBEng` | вид `CLIENT`, `db.system.name`, `db.namespace`, `server.address`, `db.response.returned_rows`; у файловой базы (`DBV8DBEng`) своего значения `db.system.name` в семантических соглашениях нет, используется `1c.v8dbeng` |
 | `EXCP` | вид `INTERNAL`, статус `ERROR` с описанием из `Descr`, событие спана `exception` |
