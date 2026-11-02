@@ -1141,6 +1141,102 @@
 
 КонецПроцедуры
 
+// Кадры английского варианта встроенного языка - из журнала тонкого клиента 8.3.27 с английской конфигурацией
+
+&Тест
+Процедура ИмяФункцииИзВызоваОбщегоМодуляАнглийскийВариант() Экспорт
+
+	// Когда
+	Экспортер().ОбработатьСобытияТехнологическогоЖурнала(События(
+		"05:12.100000-1000,SDBL,1,OSThread=7," + Контекст(
+			"Form.Write : Document.Document.Form.ObjectForm",
+			"Document.Document.ObjectModule : 23 : CommonServer.Count();",
+			"CommonModule.CommonServer.Module : 4 : Return Query.Execute().Unload()[0][0];")), ОписаниеФайла());
+
+	// Тогда
+	Атрибуты = Атрибуты(Спаны()[0]);
+	Ожидаем.Что(Атрибуты["code.file.path"]).Равно("CommonModule.CommonServer.Module");
+	Ожидаем.Что(Атрибуты["code.line.number"]).Равно("4");
+	Ожидаем.Что(Атрибуты["code.function.name"]).Равно("CommonModule.CommonServer.Module.Count");
+
+КонецПроцедуры
+
+&Тест
+Процедура ИмяФункцииИзВызоваМодуляМенеджераАнглийскийВариант() Экспорт
+
+	// Когда
+	Экспортер().ОбработатьСобытияТехнологическогоЖурнала(События(
+		"05:12.100000-1000,SDBL,1,OSThread=7," + Контекст(
+			"Form.Write : Document.Document.Form.ObjectForm",
+			"Document.Document.ObjectModule : 24 : Documents.Document.Count();",
+			"Document.Document.ManagerModule : 4 : Return Query.Execute().Unload()[0][0];")), ОписаниеФайла());
+
+	// Тогда
+	Ожидаем.Что(Атрибуты(Спаны()[0])["code.function.name"]).Равно("Document.Document.ManagerModule.Count");
+
+КонецПроцедуры
+
+&Тест
+Процедура ИмяФункцииИзВызоваСервераОбщегоМодуляАнглийскийВариант() Экспорт
+
+	// Когда
+	Экспортер().ОбработатьСобытияТехнологическогоЖурнала(События(
+		"05:12.100000-1000,SDBL,1,OSThread=7," + Контекст(
+			"CommonModule.Call : CommonModule.CommonServer.Module.Count",
+			"CommonModule.CommonServer.Module : 4 : Return Query.Execute().Unload()[0][0];")), ОписаниеФайла());
+
+	// Тогда
+	Ожидаем.Что(Атрибуты(Спаны()[0])["code.function.name"]).Равно("CommonModule.CommonServer.Module.Count");
+
+КонецПроцедуры
+
+&Тест
+Процедура ИмяФункцииИзВызоваСервераФормыАнглийскийВариант() Экспорт
+
+	// Когда - модуль формы в вызове называется <форма>.Module, в кадре - <форма>.Form
+	Экспортер().ОбработатьСобытияТехнологическогоЖурнала(События(
+		"05:12.100000-1000,SDBL,1,OSThread=7," + Контекст(
+			"Form.Call : Document.Document.Form.ObjectForm.Module.ServerCount",
+			"Document.Document.Form.ObjectForm.Form : 5 : Query.Execute();")), ОписаниеФайла());
+
+	// Тогда
+	Атрибуты = Атрибуты(Спаны()[0]);
+	Ожидаем.Что(Атрибуты["code.file.path"]).Равно("Document.Document.Form.ObjectForm.Form");
+	Ожидаем.Что(Атрибуты["code.function.name"]).Равно("Document.Document.Form.ObjectForm.Form.ServerCount");
+
+КонецПроцедуры
+
+&Тест
+Процедура КонтекстВызоваСервераБезКадровАнглийскийВариант() Экспорт
+
+	// Когда
+	Экспортер().ОбработатьСобытияТехнологическогоЖурнала(События(
+		"05:12.100000-1000,SDBL,1,OSThread=7," + Контекст(
+			"Form.Call : Document.Document.Form.ObjectForm.Module.ServerCount")), ОписаниеФайла());
+
+	// Тогда
+	Атрибуты = Атрибуты(Спаны()[0]);
+	Ожидаем.Что(Атрибуты["code.file.path"]).Равно("Document.Document.Form.ObjectForm.Form");
+	Ожидаем.Что(Атрибуты["code.function.name"]).Равно("Document.Document.Form.ObjectForm.Form.ServerCount");
+	Ожидаем.Что(Атрибуты.Получить("code.line.number")).Равно(Неопределено);
+
+КонецПроцедуры
+
+&Тест
+Процедура МестоИсключенияИзОписанияАнглийскийВариант() Экспорт
+
+	// Когда
+	Экспортер().ОбработатьСобытияТехнологическогоЖурнала(События(
+		"05:12.100000-1000,EXCP,1,OSThread=7,Exception=RuntimeException,"
+			+ "Descr='{CommonModule.CommonServer.Module(8)}:" + Символы.Таб + "Raise ""test"";'"), ОписаниеФайла());
+
+	// Тогда
+	Атрибуты = Атрибуты(ЗаписиЛога()[0]);
+	Ожидаем.Что(Атрибуты["code.file.path"]).Равно("CommonModule.CommonServer.Module");
+	Ожидаем.Что(Атрибуты["code.line.number"]).Равно("8");
+
+КонецПроцедуры
+
 &Тест
 Процедура ИмяФункцииНеОпределяетсяПоВызовуВДругойМодуль() Экспорт
 
