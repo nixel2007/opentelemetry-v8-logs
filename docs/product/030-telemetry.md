@@ -134,7 +134,32 @@ Loki делает индексируемыми метками только ат�
 Квалификатор сопоставляется с модулем последнего кадра без имени расширения в обоих вариантах
 встроенного языка: `ОбменДанными` - `ОбщийМодуль.ОбменДанными.Модуль` или `CommonModule.ОбменДанными.Module`,
 `Документы.Заказ` и `Documents.Заказ` - `Документ.Заказ.МодульМенеджера` или `Document.Заказ.ManagerModule`
-(так же `Справочники` и `Catalogs`, `РегистрыСведений` и `InformationRegisters` и другие менеджеры).
+Менеджеры с модулем менеджера:
+
+| Коллекция | Вид объекта в кадре |
+|-----------|---------------------|
+| `Справочники`, `Catalogs` | `Справочник`, `Catalog` |
+| `Документы`, `Documents` | `Документ`, `Document` |
+| `ЖурналыДокументов`, `DocumentJournals` | `ЖурналДокументов`, `DocumentJournal` |
+| `Перечисления`, `Enums` | `Перечисление`, `Enum` |
+| `Отчеты`, `Reports` | `Отчет`, `Report` |
+| `Обработки`, `DataProcessors` | `Обработка`, `DataProcessor` |
+| `ПланыВидовХарактеристик`, `ChartsOfCharacteristicTypes` | `ПланВидовХарактеристик`, `ChartOfCharacteristicTypes` |
+| `ПланыСчетов`, `ChartsOfAccounts` | `ПланСчетов`, `ChartOfAccounts` |
+| `ПланыВидовРасчета`, `ChartsOfCalculationTypes` | `ПланВидовРасчета`, `ChartOfCalculationTypes` |
+| `ПланыОбмена`, `ExchangePlans` | `ПланОбмена`, `ExchangePlan` |
+| `РегистрыСведений`, `InformationRegisters` | `РегистрСведений`, `InformationRegister` |
+| `РегистрыНакопления`, `AccumulationRegisters` | `РегистрНакопления`, `AccumulationRegister` |
+| `РегистрыБухгалтерии`, `AccountingRegisters` | `РегистрБухгалтерии`, `AccountingRegister` |
+| `РегистрыРасчета`, `CalculationRegisters` | `РегистрРасчета`, `CalculationRegister` |
+| `БизнесПроцессы`, `BusinessProcesses` | `БизнесПроцесс`, `BusinessProcess` |
+| `Задачи`, `Tasks` | `Задача`, `Task` |
+| `ХранилищаНастроек`, `SettingsStorages` | `ХранилищеНастроек`, `SettingsStorage` |
+| `Константы`, `Constants` | `Константа`, `Constant` |
+| `КритерииОтбора`, `FilterCriteria` | `КритерийОтбора`, `FilterCriterion` |
+
+Модули набора записей, менеджера значения константы и команд через квалификатор не вызываются: функция
+в них определяется по вызову без квалификатора в том же модуле.
 
 ### Метрики
 

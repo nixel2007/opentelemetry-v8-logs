@@ -389,7 +389,8 @@
 		+ "РегистрыБухгалтерии РегистрБухгалтерии AccountingRegisters AccountingRegister,"
 		+ "РегистрыРасчета РегистрРасчета CalculationRegisters CalculationRegister,"
 		+ "БизнесПроцессы БизнесПроцесс BusinessProcesses BusinessProcess,Задачи Задача Tasks Task,"
-		+ "ХранилищаНастроек ХранилищеНастроек SettingsStorages SettingsStorage", ",") Цикл
+		+ "ХранилищаНастроек ХранилищеНастроек SettingsStorages SettingsStorage,"
+		+ "Константы Константа Constants Constant,КритерииОтбора КритерийОтбора FilterCriteria FilterCriterion", ",") Цикл
 		Имена = СтрРазделить(Строка, " ");
 		ВидыОбъекта = Новый Структура("Русский, Английский", Имена[1], Имена[3]);
 		ВидыОбъектовМенеджеров.Вставить(Имена[0], ВидыОбъекта);
