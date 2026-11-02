@@ -45,6 +45,7 @@ Loki делает индексируемыми метками только ат�
 | `process.executable.name`, `process.pid` | процесс и PID из имени каталога или файла |
 | `log.file.path`, `log.file.name` | путь к файлу журнала и имя файла |
 | `user.name` | пользователь из свойства `Usr` |
+| `client.address` | компьютер клиента из свойства `t:computerName`; у фоновых и регламентных заданий - сам сервер |
 | `session.id` | номер сеанса из свойства `SessionID`; настройка `otel.v8-logs.session-id.enabled` |
 | `db.system.name`, `db.namespace`, `server.address` | у событий СУБД, см. [трассы](./telemetry.md#трассы) |
 | `db.response.returned_rows` | у событий СУБД, настройка `otel.v8-logs.returned-rows.enabled`: число строк результата из свойства `Rows`. Платформа пишет `Rows` только у запросов, которые возвращают строки; у изменяющих запросов его нет, число изменённых строк - в `RowsAffected` |
@@ -304,6 +305,7 @@ Loki делает индексируемыми метками только ат�
 | `v8.eventlog.event.presentation` | представление события, как в просмотре журнала, на языке из настройки `otel.v8-logs.language`: «Данные. Проведение» или «Data. Posting». У событий без представления (события пользователя, события, которых нет в платформе 8.3.27) - идентификатор события, поэтому атрибут заполнен у всех записей |
 | `user.name`, `user.id` | имя и идентификатор пользователя |
 | `v8.eventlog.computer`, `v8.eventlog.application` | компьютер и приложение |
+| `client.address` | компьютер записи, то же значение, что `v8.eventlog.computer` |
 | `v8.eventlog.connection`, `v8.eventlog.session` | соединение и сеанс |
 | `session.id` | номер сеанса; настройка `otel.v8-logs.session-id.enabled` |
 | `v8.eventlog.transaction.status` | `committed` (код `C`), `rolled_back` (код `R`): в журналах с этими кодами записаны события `_$Transaction$_.Commit` и `Rollback` |
