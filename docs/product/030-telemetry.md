@@ -419,12 +419,12 @@ Loki делает индексируемыми метками только ат�
 | Серьезность | `INFO` |
 | `v8.cluster.name` | имя кластера |
 | `v8.infobase.name` | имя информационной базы - в ресурсе записи, не в атрибутах |
-| `v8.session.id` | номер сеанса (число) |
+| `session.id` | номер сеанса (число); тот же атрибут, что у записей технологического журнала и журнала регистрации, настройка `session-id.enabled` на снимки не действует |
 | `v8.session.app_id` | приложение сеанса |
 | `user.name` | имя пользователя |
 | `host.name`, `process.pid` | рабочий сервер и PID рабочего процесса сеанса |
-| `v8.session.client.host` | компьютер клиента |
-| `client.address` | адрес клиента |
+| `client.address` | компьютер клиента, как у записей технологического журнала и журнала регистрации |
+| `v8.session.client.ip` | IP-адрес клиента |
 | `v8.session.started_at`, `v8.session.last_active_at` | начало и последняя активность, `yyyy-MM-ddTHH:mm:ss` |
 | `v8.session.hibernated` | сеанс спит (булево) |
 | `v8.session.blocked.db`, `v8.session.blocked.lock` | номер сеанса, который блокирует этот сеанс: в СУБД и управляемой блокировкой; 0 - не заблокирован |
@@ -446,9 +446,9 @@ Loki делает индексируемыми метками только ат�
 
 ```logql
 # память сеанса 1022 базы erp
-max_over_time({service_name="<сервис>", v8_infobase_name="erp"} | scope_name="opentelemetry-v8-logs.cluster" | v8_session_id="1022" | unwrap v8_session_memory_current [5m])
+max_over_time({service_name="<сервис>", v8_infobase_name="erp"} | scope_name="opentelemetry-v8-logs.cluster" | session_id="1022" | unwrap v8_session_memory_current [5m])
 # 10 сеансов с наибольшей памятью
-topk(10, max by (v8_infobase_name, v8_session_id, user_name) (max_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | unwrap v8_session_memory_current [5m])))
+topk(10, max by (v8_infobase_name, session_id, user_name) (max_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | unwrap v8_session_memory_current [5m])))
 ```
 
 ### Связь с трассами технологического журнала

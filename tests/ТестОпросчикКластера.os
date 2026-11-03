@@ -266,13 +266,13 @@
 	Ожидаемые = Новый Соответствие;
 	Ожидаемые.Вставить("v8.cluster.name", "Главный");
 	Ожидаемые.Вставить("v8.infobase.name", "erp");
-	Ожидаемые.Вставить("v8.session.id", 17);
+	Ожидаемые.Вставить("session.id", 17);
 	Ожидаемые.Вставить("v8.session.app_id", "1CV8C");
 	Ожидаемые.Вставить("user.name", "Петров");
 	Ожидаемые.Вставить("host.name", "srv1");
 	Ожидаемые.Вставить("process.pid", 4242);
-	Ожидаемые.Вставить("v8.session.client.host", "client-pc");
-	Ожидаемые.Вставить("client.address", "10.0.0.5");
+	Ожидаемые.Вставить("client.address", "client-pc");
+	Ожидаемые.Вставить("v8.session.client.ip", "10.0.0.5");
 	Ожидаемые.Вставить("v8.session.started_at", "2026-10-24T09:05:07");
 	Ожидаемые.Вставить("v8.session.last_active_at", "2026-10-24T10:00:00");
 	Ожидаемые.Вставить("v8.session.hibernated", Истина);
@@ -309,12 +309,12 @@
 	Ожидаем.Что(Снимок.Сеансы).ИмеетДлину(1);
 	АтрибутыСеанса = Снимок.Сеансы[0].Атрибуты;
 	Для Каждого Ключ Из СтрРазделить("v8.infobase.name, v8.session.app_id, user.name, host.name, process.pid,
-		|v8.session.client.host, client.address, v8.session.started_at, v8.session.last_active_at,
+		|client.address, v8.session.client.ip, v8.session.started_at, v8.session.last_active_at,
 		|v8.session.current_service, v8.session.data_separation, v8.session.license.series", ", " + Символы.ПС, Ложь) Цикл
 		Ожидаем.Что(АтрибутыСеанса[Ключ], Ключ).Равно(Неопределено);
 	КонецЦикла;
 	Ожидаем.Что(АтрибутыСеанса["v8.cluster.name"]).Равно("Главный");
-	Ожидаем.Что(АтрибутыСеанса["v8.session.id"]).Равно(0);
+	Ожидаем.Что(АтрибутыСеанса["session.id"]).Равно(0);
 	Ожидаем.Что(АтрибутыСеанса["v8.session.memory.current"]).Равно(0);
 	Ожидаем.Что(АтрибутыСеанса["v8.session.hibernated"]).Равно(Ложь);
 
