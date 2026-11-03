@@ -41,7 +41,7 @@ Loki делает индексируемыми метками только ат�
 | `v8.techlog.event.name` | имя события (`CALL`, `DBMSSQL`...) |
 | `v8.techlog.duration` | длительность, мкс |
 | `v8.techlog.depth` | уровень вложенности |
-| `v8.techlog.<свойство>` | свойства события как есть: `v8.techlog.Usr`, `v8.techlog.t:clientID`, `v8.techlog.Sql`...; повторяющиеся свойства - массивом |
+| `v8.techlog.<свойство>` | свойства события как есть: `v8.techlog.t:clientID`, `v8.techlog.Sql`...; повторяющиеся свойства - массивом. Свойства, значение которых целиком записано атрибутом семантических соглашений, не записываются: `Usr` (`user.name`), `t:computerName` (`client.address`), `SessionID` (`session.id`), `Context` (`code.stacktrace`), `Rows` (`db.response.returned_rows`), у `EXCP` - `Exception` и `Descr` (`exception.type`, `exception.stacktrace`). Без атрибута семантических соглашений (например, `session.id` выключен) свойство записывается. Настройка `otel.v8-logs.semconv-duplicates.skip.enabled` |
 | `process.executable.name`, `process.pid` | процесс и PID из имени каталога или файла |
 | `log.file.path`, `log.file.name` | путь к файлу журнала и имя файла |
 | `user.name` | пользователь из свойства `Usr` |
@@ -213,7 +213,7 @@ f08d92f8-9eb2-4e19-9dd9-977d907cec2d
 тела до обрезки - в `v8.techlog.truncation.body.original_size`.
 
 Полный текст события остается в теле записи лога, пока он короче лимита тела: длинные свойства
-(`Sql`, `Sdbl`, `Locks`, `Context`) обрезаются в атрибутах до 2 КБ, но в теле - до 128 КБ.
+(`Sql`, `Sdbl`, `Locks`, `Context` в `code.stacktrace`) обрезаются в атрибутах до 2 КБ, но в теле - до 128 КБ.
 
 Лимиты по умолчанию проверены на стеке из `demo` (`grafana/otel-lgtm`) на технологическом журнале
 с событиями до 70 МБ и на журнале регистрации с комментариями до 40 МБ, представлением данных и
@@ -373,9 +373,11 @@ f08d92f8-9eb2-4e19-9dd9-977d907cec2d
 | `v8.eventlog.event` | идентификатор события (`_$Session$_.Start`, `_$Data$_.Post`...) |
 | `v8.eventlog.event.presentation` | представление события, как в просмотре журнала, на языке из настройки `otel.v8-logs.language`: «Данные. Проведение» или «Data. Posting». У событий без представления (события пользователя, события, которых нет в платформе 8.3.27) - идентификатор события, поэтому атрибут заполнен у всех записей |
 | `user.name`, `user.id` | имя и идентификатор пользователя |
-| `v8.eventlog.computer`, `v8.eventlog.application` | компьютер и приложение |
-| `client.address` | компьютер записи, то же значение, что `v8.eventlog.computer` |
-| `v8.eventlog.connection`, `v8.eventlog.session` | соединение и сеанс |
+| `v8.eventlog.application` | приложение |
+| `client.address` | компьютер записи |
+| `v8.eventlog.computer` | компьютер записи, то же значение, что `client.address`; только при выключенной настройке `otel.v8-logs.semconv-duplicates.skip.enabled` |
+| `v8.eventlog.connection` | соединение |
+| `v8.eventlog.session` | сеанс; при включенной настройке `otel.v8-logs.semconv-duplicates.skip.enabled` - только когда `session.id` не записан |
 | `session.id` | номер сеанса; настройка `otel.v8-logs.session-id.enabled` |
 | `v8.eventlog.transaction.status` | `committed` (код `C`), `rolled_back` (код `R`): в журналах с этими кодами записаны события `_$Transaction$_.Commit` и `Rollback` |
 | `v8.eventlog.transaction.status_code` | код статуса транзакции как есть: `C`, `R`, `U` (у изменений данных внутри транзакции; значение не расшифровывается) |
