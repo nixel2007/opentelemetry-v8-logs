@@ -38,7 +38,7 @@ cp demo/autumn-properties.json .   # укажите свои каталоги ж
 opentelemetry-v8-logs
 ```
 
-Grafana будет доступна на http://localhost:3000: дашборд «1С: журналы», логи в Explore → Loki
+Grafana будет доступна на http://localhost:3000: дашборды «1С: журналы» и «1С: кластер», логи в Explore → Loki
 (`{service_name="1c-cluster"}` - технологический журнал, `{service_name="erp"}` - журнал регистрации,
 `{service_name="opentelemetry-v8-logs"}` - логи самого коллектора), трассы в Explore → Tempo, метрики `v8_techlog_event_duration_*`,
 `db_client_operation_duration_*` и `v8_eventlog_records_total` в Prometheus. Метрики кластера `v8_cluster_*` включаются адресом сервера

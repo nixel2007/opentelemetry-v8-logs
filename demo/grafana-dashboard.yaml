@@ -6,3 +6,8 @@ providers:
     options:
       path: /otel-lgtm/opentelemetry-v8-logs-dashboard.json
       foldersFromFilesStructure: false
+  - name: "opentelemetry-v8-logs-cluster"
+    type: file
+    options:
+      path: /otel-lgtm/opentelemetry-v8-logs-cluster-dashboard.json
+      foldersFromFilesStructure: false
