@@ -42,8 +42,8 @@ Grafana будет доступна на http://localhost:3000: дашборды
 (`{service_name="1c-cluster"}` - технологический журнал, `{service_name="erp"}` - журнал регистрации,
 `{service_name="opentelemetry-v8-logs"}` - логи самого коллектора), трассы в Explore → Tempo, метрики `v8_techlog_event_duration_*`,
 `db_client_operation_duration_*` и `v8_eventlog_records_total` в Prometheus. Метрики кластера `v8_cluster_*` включаются адресом сервера
-администрирования `ras` (`localhost:1545`) в секции `otel.v8-logs.cluster` в `autumn-properties.json`;
-несколько серверов `ras` - массивом.
+администрирования `ras` (`localhost:1545`) в массиве `otel.v8-logs.cluster` в `autumn-properties.json`,
+по элементу на `ras`.
 Вместе с ними в Loki идут снимки сеансов - запись на сеанс за опрос в области `opentelemetry-v8-logs.cluster`
 (память, вызовы, время в СУБД, пользователь, приложение), а метрики `v8_cluster_sessions_*` дают агрегаты по
 базе и приложению.
