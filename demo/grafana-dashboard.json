@@ -295,7 +295,7 @@
       "title": "Самые долгие события",
       "description": "Максимальная длительность (v8.techlog.duration) по типу события за период",
       "datasource": { "type": "loki", "uid": "${ds_loki}" },
-      "gridPos": { "x": 0, "y": 36, "w": 12, "h": 9 },
+      "gridPos": { "x": 0, "y": 36, "w": 8, "h": 10 },
       "targets": [
         {
           "refId": "A",
@@ -313,18 +313,44 @@
     },
     {
       "id": 12,
-      "type": "logs",
+      "type": "bargauge",
       "title": "Исключения",
+      "description": "Число событий EXCP за период, сгруппированное по exception.type и exception.message. Нажмите на полосу, чтобы открыть эти записи",
       "datasource": { "type": "loki", "uid": "${ds_loki}" },
-      "gridPos": { "x": 12, "y": 36, "w": 12, "h": 9 },
+      "gridPos": { "x": 8, "y": 36, "w": 16, "h": 10 },
       "targets": [
         {
           "refId": "A",
           "queryType": "range",
-          "expr": "{service_name=~\"$service\"} | scope_name=\"opentelemetry-v8-logs.techlog\" | v8_techlog_event_name=\"EXCP\""
+          "legendFormat": "{{exception_type}} — {{exception_message}}",
+          "expr": "topk(15, sum by (exception_type, exception_message) (count_over_time({service_name=~\"$service\"} | scope_name=\"opentelemetry-v8-logs.techlog\" | v8_techlog_event_name=\"EXCP\" | label_format exception_type=`{{ if .exception_type }}{{ .exception_type }}{{ else }}без типа{{ end }}`, exception_message=`{{ if .exception_message }}{{ .exception_message }}{{ else }}без текста{{ end }}` [$__range])))"
         }
       ],
-      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "enableLogDetails": true }
+      "transformations": [],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "links": [
+            {
+              "title": "Записи исключения",
+              "url": "/explore?schemaVersion=1&orgId=1&panes=%7B%22excp%22%3A%7B%22datasource%22%3A%22${ds_loki}%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22expr%22%3A%22%7Bservice_name%3D~%5C%22${service:percentencode}%5C%22%7D%20%7C%20scope_name%3D%5C%22opentelemetry-v8-logs.techlog%5C%22%20%7C%20v8_techlog_event_name%3D%5C%22EXCP%5C%22%20%7C%20exception_type%3D%5C%22${__field.labels.exception_type:percentencode}%5C%22%20%7C%20exception_message%3D%5C%22${__field.labels.exception_message:percentencode}%5C%22%22%2C%22queryType%22%3A%22range%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%7D%7D"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "namePlacement": "top",
+        "sizing": "manual",
+        "maxVizHeight": 42,
+        "minVizHeight": 32,
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "limit": 15 }
+      }
     },
     {
       "id": 13,
@@ -332,7 +358,7 @@
       "title": "Метрики",
       "description": "Метрики привязаны ко времени отправки, а не события: накопленные журналы дают всплеск в момент выгрузки",
       "collapsed": false,
-      "gridPos": { "x": 0, "y": 45, "w": 24, "h": 1 },
+      "gridPos": { "x": 0, "y": 46, "w": 24, "h": 1 },
       "panels": []
     },
     {
@@ -340,7 +366,7 @@
       "type": "timeseries",
       "title": "Длительность событий техжурнала, p95",
       "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
-      "gridPos": { "x": 0, "y": 46, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 47, "w": 12, "h": 8 },
       "targets": [
         {
           "refId": "A",
@@ -356,7 +382,7 @@
       "type": "timeseries",
       "title": "События техжурнала в секунду",
       "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
-      "gridPos": { "x": 12, "y": 46, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 47, "w": 12, "h": 8 },
       "targets": [
         {
           "refId": "A",
@@ -372,7 +398,7 @@
       "type": "timeseries",
       "title": "Записи журнала регистрации в секунду",
       "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
-      "gridPos": { "x": 0, "y": 54, "w": 24, "h": 8 },
+      "gridPos": { "x": 0, "y": 55, "w": 24, "h": 8 },
       "targets": [
         {
           "refId": "A",
@@ -388,7 +414,7 @@
       "type": "row",
       "title": "Трассы",
       "collapsed": false,
-      "gridPos": { "x": 0, "y": 62, "w": 24, "h": 1 },
+      "gridPos": { "x": 0, "y": 63, "w": 24, "h": 1 },
       "panels": []
     },
     {
@@ -397,7 +423,7 @@
       "title": "Медленные операции",
       "description": "Средняя длительность спанов по операции, базе и пользователю за период, не больше 7 дней. Нажмите на операцию, чтобы открыть её трассы",
       "datasource": { "type": "tempo", "uid": "${ds_tempo}" },
-      "gridPos": { "x": 0, "y": 63, "w": 24, "h": 10 },
+      "gridPos": { "x": 0, "y": 64, "w": 24, "h": 10 },
       "targets": [
         {
           "refId": "A",
@@ -459,7 +485,7 @@
       "title": "Частые операции",
       "description": "Число спанов по операции за период, не больше 7 дней. Нажмите на операцию, чтобы открыть её трассы",
       "datasource": { "type": "tempo", "uid": "${ds_tempo}" },
-      "gridPos": { "x": 0, "y": 73, "w": 12, "h": 14 },
+      "gridPos": { "x": 0, "y": 74, "w": 12, "h": 14 },
       "targets": [
         {
           "refId": "A",
@@ -497,7 +523,7 @@
       "title": "Время пользователей",
       "description": "Суммарная длительность серверных вызовов (CALL) пользователя за период, не больше 7 дней. Нажмите на пользователя, чтобы открыть его трассы",
       "datasource": { "type": "tempo", "uid": "${ds_tempo}" },
-      "gridPos": { "x": 12, "y": 73, "w": 12, "h": 14 },
+      "gridPos": { "x": 12, "y": 74, "w": 12, "h": 14 },
       "targets": [
         {
           "refId": "A",
@@ -535,7 +561,7 @@
       "description": "Последние трассы не короче порога «Трассы от». Нажмите на идентификатор трассы, чтобы открыть её каскад вызовов. Поиск в Tempo охватывает не больше 7 дней",
       "timeFrom": "7d",
       "datasource": { "type": "tempo", "uid": "${ds_tempo}" },
-      "gridPos": { "x": 0, "y": 87, "w": 24, "h": 10 },
+      "gridPos": { "x": 0, "y": 88, "w": 24, "h": 10 },
       "targets": [
         {
           "refId": "A",
@@ -572,7 +598,7 @@
       "title": "Каскад вызовов",
       "description": "Трасса из поля «Трасса»: спаны по вложенности и времени, атрибуты спана и переход к его записям в Loki",
       "datasource": { "type": "tempo", "uid": "${ds_tempo}" },
-      "gridPos": { "x": 0, "y": 97, "w": 24, "h": 22 },
+      "gridPos": { "x": 0, "y": 98, "w": 24, "h": 22 },
       "targets": [
         {
           "refId": "A",
