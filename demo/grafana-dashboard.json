@@ -86,10 +86,10 @@
       {
         "name": "user",
         "label": "Пользователь",
-        "description": "Пользователь 1С в трассах (v8.techlog.Usr)",
+        "description": "Пользователь 1С в трассах (user.name)",
         "type": "query",
         "datasource": { "type": "tempo", "uid": "${ds_tempo}" },
-        "query": { "type": 1, "label": "v8.techlog.Usr", "refId": "user" },
+        "query": { "type": 1, "label": "user.name", "refId": "user" },
         "refresh": 2,
         "sort": 1,
         "multi": true,
@@ -403,7 +403,7 @@
           "refId": "A",
           "queryType": "traceql",
           "metricsQueryType": "instant",
-          "query": "{resource.service.name=~\"$service\" && resource.v8.infobase.name=~\"$infobase\" && span.v8.techlog.Usr=~\"$user\"} | avg_over_time(duration) by (name, resource.v8.infobase.name, span.v8.techlog.Usr) | topk(15)"
+          "query": "{resource.service.name=~\"$service\" && resource.v8.infobase.name=~\"$infobase\" && span.user.name=~\"$user\"} | avg_over_time(duration) by (name, resource.v8.infobase.name, span.user.name) | topk(15)"
         }
       ],
       "transformations": [
@@ -412,8 +412,8 @@
           "id": "organize",
           "options": {
             "excludeByName": { "Field": true },
-            "indexByName": { "name": 0, "resource.v8.infobase.name": 1, "span.v8.techlog.Usr": 2, "Last *": 3 },
-            "renameByName": { "name": "Операция", "resource.v8.infobase.name": "База", "span.v8.techlog.Usr": "Пользователь", "Last *": "Среднее" }
+            "indexByName": { "name": 0, "resource.v8.infobase.name": 1, "span.user.name": 2, "Last *": 3 },
+            "renameByName": { "name": "Операция", "resource.v8.infobase.name": "База", "span.user.name": "Пользователь", "Last *": "Среднее" }
           }
         },
         { "id": "sortBy", "options": { "sort": [ { "field": "Среднее", "desc": true } ] } }
@@ -431,7 +431,7 @@
                 "value": [
                   {
                     "title": "Трассы операции",
-                    "url": "/a/grafana-exploretraces-app/explore?${__url_time_range}&var-ds=${ds_tempo}&var-primarySignal=true&var-filters=name%7C%3D%7C${__value.text:percentencode}&var-filters=resource.v8.infobase.name%7C%3D%7C${__data.fields[\"База\"]:percentencode}&var-filters=span.v8.techlog.Usr%7C%3D%7C${__data.fields[\"Пользователь\"]:percentencode}&var-metric=duration&actionView=traceList"
+                    "url": "/a/grafana-exploretraces-app/explore?${__url_time_range}&var-ds=${ds_tempo}&var-primarySignal=true&var-filters=name%7C%3D%7C${__value.text:percentencode}&var-filters=resource.v8.infobase.name%7C%3D%7C${__data.fields[\"База\"]:percentencode}&var-filters=span.user.name%7C%3D%7C${__data.fields[\"Пользователь\"]:percentencode}&var-metric=duration&actionView=traceList"
                   }
                 ]
               }
@@ -465,7 +465,7 @@
           "refId": "A",
           "queryType": "traceql",
           "metricsQueryType": "instant",
-          "query": "{resource.service.name=~\"$service\" && resource.v8.infobase.name=~\"$infobase\" && span.v8.techlog.Usr=~\"$user\"} | count_over_time() by (name) | topk(10)"
+          "query": "{resource.service.name=~\"$service\" && resource.v8.infobase.name=~\"$infobase\" && span.user.name=~\"$user\"} | count_over_time() by (name) | topk(10)"
         }
       ],
       "transformations": [
@@ -503,7 +503,7 @@
           "refId": "A",
           "queryType": "traceql",
           "metricsQueryType": "instant",
-          "query": "{resource.service.name=~\"$service\" && resource.v8.infobase.name=~\"$infobase\" && span.v8.techlog.Usr=~\"$user\" && kind = server} | sum_over_time(duration) by (span.v8.techlog.Usr) | topk(10)"
+          "query": "{resource.service.name=~\"$service\" && resource.v8.infobase.name=~\"$infobase\" && span.user.name=~\"$user\" && kind = server} | sum_over_time(duration) by (span.user.name) | topk(10)"
         }
       ],
       "transformations": [
@@ -514,13 +514,13 @@
         "defaults": {
           "unit": "s",
           "min": 0,
-          "displayName": "${__data.fields[\"span.v8.techlog.Usr\"]}",
+          "displayName": "${__data.fields[\"span.user.name\"]}",
           "color": { "mode": "fixed", "fixedColor": "purple" },
           "mappings": [ { "type": "regex", "options": { "pattern": "^\"(.*)\"$", "result": { "text": "$1" } } } ],
           "links": [
             {
               "title": "Трассы пользователя",
-              "url": "/a/grafana-exploretraces-app/explore?${__url_time_range}&var-ds=${ds_tempo}&var-primarySignal=nestedSetParent%3C0&var-filters=span.v8.techlog.Usr%7C%3D%7C${__data.fields[\"span.v8.techlog.Usr\"]:percentencode}&var-metric=duration&actionView=traceList"
+              "url": "/a/grafana-exploretraces-app/explore?${__url_time_range}&var-ds=${ds_tempo}&var-primarySignal=nestedSetParent%3C0&var-filters=span.user.name%7C%3D%7C${__data.fields[\"span.user.name\"]:percentencode}&var-metric=duration&actionView=traceList"
             }
           ]
         },
@@ -542,7 +542,7 @@
           "queryType": "traceql",
           "tableType": "traces",
           "limit": 20,
-          "query": "{resource.service.name=~\"$service\" && resource.v8.infobase.name=~\"$infobase\" && span.v8.techlog.Usr=~\"$user\" && nestedSetParent < 0 && duration >= $min_duration}"
+          "query": "{resource.service.name=~\"$service\" && resource.v8.infobase.name=~\"$infobase\" && span.user.name=~\"$user\" && nestedSetParent < 0 && duration >= $min_duration}"
         }
       ],
       "fieldConfig": {
