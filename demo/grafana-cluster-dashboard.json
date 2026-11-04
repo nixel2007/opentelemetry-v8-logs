@@ -1,0 +1,815 @@
+{
+  "uid": "opentelemetry-v8-logs-cluster",
+  "title": "1С: кластер",
+  "description": "Метрики кластеров 1С, снятые opentelemetry-v8-logs через ras: кластеры, рабочие процессы, сеансы и лицензии",
+  "tags": ["1c", "opentelemetry-v8-logs"],
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 41,
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "1m",
+  "links": [
+    {
+      "title": "1С: журналы",
+      "type": "link",
+      "icon": "dashboard",
+      "url": "/d/opentelemetry-v8-logs",
+      "keepTime": true
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "ds_prometheus",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "prometheus" }
+      },
+      {
+        "name": "ds_loki",
+        "label": "Loki",
+        "type": "datasource",
+        "query": "loki",
+        "current": { "text": "Loki", "value": "loki" }
+      },
+      {
+        "name": "service",
+        "label": "Сервис",
+        "description": "service.name метрик кластера: по одному на сервер ras",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+        "query": "label_values(v8_cluster_up, service_name)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": { "text": ["All"], "value": ["$__all"] }
+      },
+      {
+        "name": "cluster",
+        "label": "Кластер",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+        "query": "label_values(v8_cluster_processes{service_name=~\"$service\"}, v8_cluster_name)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": { "text": ["All"], "value": ["$__all"] }
+      },
+      {
+        "name": "host",
+        "label": "Рабочий сервер",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+        "query": "label_values(v8_cluster_processes{service_name=~\"$service\", v8_cluster_name=~\"$cluster\"}, host_name)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": { "text": ["All"], "value": ["$__all"] }
+      },
+      {
+        "name": "infobase",
+        "label": "База",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+        "query": "label_values({__name__=~\"v8_cluster_sessions|v8_cluster_connections|v8_cluster_infobase_sessions_denied\", service_name=~\"$service\", v8_cluster_name=~\"$cluster\"}, v8_infobase_name)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": { "text": ["All"], "value": ["$__all"] }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Обзор",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Сервер ras",
+      "description": "Удался ли последний опрос ras (v8.cluster.up)",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 1, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "legendFormat": "{{service_name}}",
+          "expr": "max by (service_name) (v8_cluster_up{service_name=~\"$service\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "нет данных",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "недоступен", "color": "red" }, "1": { "text": "доступен", "color": "green" } } }
+          ],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Сеансы",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 4, "y": 1, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(v8_cluster_sessions{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "noValue": "0", "color": { "mode": "fixed", "fixedColor": "text" } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Соединения",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 8, "y": 1, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(v8_cluster_connections{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "noValue": "0", "color": { "mode": "fixed", "fixedColor": "text" } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Рабочие процессы",
+      "description": "Запущенные рабочие процессы",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 12, "y": 1, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(v8_cluster_processes{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\", v8_process_running=\"true\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "noValue": "0", "color": { "mode": "fixed", "fixedColor": "text" } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Ожидают блокировку",
+      "description": "Сеансы, ожидающие блокировку СУБД или управляемую",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 16, "y": 1, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(v8_cluster_sessions_blocked{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Лицензии заняты",
+      "description": "Доля занятых лицензий самой загруженной серии. Серии, которые держат только рабочие процессы (лицензия сервера), сеансами не занимаются и в долю не входят",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 20, "y": 1, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "max(sum by (service_name, v8_cluster_name, v8_license_series) (v8_cluster_licenses_used{service_name=~\"$service\", v8_cluster_name=~\"$cluster\"}) / sum by (service_name, v8_cluster_name, v8_license_series) (v8_cluster_licenses_total{service_name=~\"$service\", v8_cluster_name=~\"$cluster\"}))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "нет данных",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.8 }, { "color": "red", "value": 0.95 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Сеансы по базам",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 5, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_infobase_name}}",
+          "expr": "sum by (v8_cluster_name, v8_infobase_name) (v8_cluster_sessions{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 10, "axisSoftMax": 1 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Сеансы по приложениям",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 12, "y": 5, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_session_app_id}}",
+          "expr": "sum by (v8_cluster_name, v8_session_app_id) (v8_cluster_sessions{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 10, "stacking": { "mode": "normal" } } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Ожидание блокировок",
+      "description": "Сеансы, ожидающие блокировку: db - СУБД, lock - управляемая",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 13, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_infobase_name}} / {{v8_block_kind}}",
+          "expr": "sum by (v8_cluster_name, v8_infobase_name, v8_block_kind) (v8_cluster_sessions_blocked{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 10, "axisSoftMax": 1 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Долгие вызовы",
+      "description": "Сеансы, текущий вызов которых длится не меньше порога long-call-thresholds",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 8, "y": 13, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_infobase_name}} ≥ {{v8_duration_threshold}} с",
+          "expr": "sum by (v8_cluster_name, v8_infobase_name, v8_duration_threshold) (v8_cluster_sessions_long_calls{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 10, "axisSoftMax": 1 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Блокировки баз",
+      "description": "Только базы, учетные данные которых заданы в infobases настроек кластера",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 16, "y": 13, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "format": "table",
+          "expr": "max by (v8_cluster_name, v8_infobase_name) (v8_cluster_infobase_sessions_denied{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\"})"
+        },
+        {
+          "refId": "B",
+          "instant": true,
+          "format": "table",
+          "expr": "max by (v8_cluster_name, v8_infobase_name) (v8_cluster_infobase_scheduled_jobs_denied{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\"})"
+        }
+      ],
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "renameByName": {
+              "v8_cluster_name": "Кластер",
+              "v8_infobase_name": "База",
+              "Value #A": "Начало сеансов",
+              "Value #B": "Регламентные задания"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "нет баз в infobases",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "разрешено", "color": "green" }, "1": { "text": "заблокировано", "color": "red" } } }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "Начало сеансов|Регламентные задания" },
+            "properties": [ { "id": "custom.cellOptions", "value": { "type": "color-text" } } ]
+          }
+        ]
+      },
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 13,
+      "type": "bargauge",
+      "title": "Лицензии по сериям",
+      "description": "Занято сеансами из допустимого лицензией серии; серии, которые держат только рабочие процессы (лицензия сервера), не показываются",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 21, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "legendFormat": "{{v8_cluster_name}} / {{v8_license_series}}",
+          "expr": "sum by (v8_cluster_name, v8_license_series) (v8_cluster_licenses_used{service_name=~\"$service\", v8_cluster_name=~\"$cluster\"}) / sum by (v8_cluster_name, v8_license_series) (v8_cluster_licenses_total{service_name=~\"$service\", v8_cluster_name=~\"$cluster\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.8 }, { "color": "red", "value": 0.95 } ] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Занятые лицензии",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 12, "y": 21, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_license_series}}",
+          "expr": "sum by (v8_cluster_name, v8_license_series) (v8_cluster_licenses_used{service_name=~\"$service\", v8_cluster_name=~\"$cluster\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 10, "axisSoftMax": 1 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 20,
+      "type": "row",
+      "title": "Рабочие процессы: $service",
+      "description": "Повторяется по сервису: у каждого сервера ras свой service.name, а имя кластера бывает одинаковым («Локальный кластер»)",
+      "repeat": "service",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 29, "w": 24, "h": 1 },
+      "panels": []
+    },
+    {
+      "id": 21,
+      "type": "table",
+      "title": "Рабочие процессы сейчас",
+      "description": "Последний снимок кластера; средние длительности - как их считает кластер",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 30, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "format": "table",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_memory_usage_bytes{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\"})"
+        },
+        {
+          "refId": "B",
+          "instant": true,
+          "format": "table",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_connections{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\"})"
+        },
+        {
+          "refId": "C",
+          "instant": true,
+          "format": "table",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_available_performance{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\"})"
+        },
+        {
+          "refId": "D",
+          "instant": true,
+          "format": "table",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_call_duration_avg_seconds{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\", v8_call_kind=\"call\"})"
+        },
+        {
+          "refId": "E",
+          "instant": true,
+          "format": "table",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_call_duration_avg_seconds{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\", v8_call_kind=\"db\"})"
+        },
+        {
+          "refId": "F",
+          "instant": true,
+          "format": "table",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_call_duration_avg_seconds{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\", v8_call_kind=\"lock\"})"
+        }
+      ],
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "renameByName": {
+              "v8_cluster_name": "Кластер",
+              "host_name": "Сервер",
+              "process_pid": "PID",
+              "Value #A": "Память",
+              "Value #B": "Соединения",
+              "Value #C": "Доступная производительность",
+              "Value #D": "Вызов, среднее",
+              "Value #E": "СУБД, среднее",
+              "Value #F": "Блокировки, среднее"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Память" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
+          { "matcher": { "id": "byRegexp", "options": ".*, среднее" }, "properties": [ { "id": "unit", "value": "s" }, { "id": "decimals", "value": 3 } ] }
+        ]
+      },
+      "options": { "showHeader": true, "sortBy": [ { "displayName": "Память", "desc": true } ] }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Память рабочих процессов",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 38, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{host_name}}:{{process_pid}}",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_memory_usage_bytes{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "Соединения рабочих процессов",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 12, "y": 38, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{host_name}}:{{process_pid}}",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_connections{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 10, "axisSoftMax": 1 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 24,
+      "type": "timeseries",
+      "title": "Средняя длительность вызова",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 46, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{host_name}}:{{process_pid}}",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_call_duration_avg_seconds{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\", v8_call_kind=\"call\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "Средняя длительность: СУБД и блокировки",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 12, "y": 46, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{host_name}}:{{process_pid}} {{v8_call_kind}}",
+          "expr": "max by (v8_cluster_name, host_name, process_pid, v8_call_kind) (v8_cluster_process_call_duration_avg_seconds{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\", v8_call_kind=~\"db|lock\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 26,
+      "type": "timeseries",
+      "title": "Доступная производительность",
+      "description": "Оценка кластера: чем меньше, тем сильнее загружен процесс",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 54, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{host_name}}:{{process_pid}}",
+          "expr": "max by (v8_cluster_name, host_name, process_pid) (v8_cluster_process_available_performance{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 10, "axisSoftMax": 1 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 27,
+      "type": "timeseries",
+      "title": "Состояние рабочих процессов",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 12, "y": 54, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{host_name}} запущен={{v8_process_running}} включен={{v8_process_enabled}}",
+          "expr": "sum by (v8_cluster_name, host_name, v8_process_running, v8_process_enabled) (v8_cluster_processes{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", host_name=~\"$host\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 30,
+      "type": "row",
+      "title": "Нагрузка сеансов за 5 минут: $service",
+      "repeat": "service",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 62, "w": 24, "h": 1 },
+      "panels": []
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "Процессорное время",
+      "description": "Сумма по живым сеансам за скользящие 5 минут кластера",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 63, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_infobase_name}}",
+          "expr": "sum by (v8_cluster_name, v8_infobase_name) (v8_cluster_sessions_cpu_time_seconds{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\", v8_window=\"last5min\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 32,
+      "type": "timeseries",
+      "title": "Длительность вызовов",
+      "description": "call - все вызовы, db - вызовы СУБД",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 12, "y": 63, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_infobase_name}} {{v8_call_kind}}",
+          "expr": "sum by (v8_cluster_name, v8_infobase_name, v8_call_kind) (v8_cluster_sessions_call_duration_seconds{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\", v8_window=\"last5min\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 33,
+      "type": "timeseries",
+      "title": "Вызовы",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 0, "y": 71, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_infobase_name}}",
+          "expr": "sum by (v8_cluster_name, v8_infobase_name) (v8_cluster_sessions_calls{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\", v8_window=\"last5min\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 10, "axisSoftMax": 1 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 34,
+      "type": "timeseries",
+      "title": "Ввод-вывод",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 8, "y": 71, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_infobase_name}} {{v8_io_direction}}",
+          "expr": "sum by (v8_cluster_name, v8_infobase_name, v8_io_direction) (v8_cluster_sessions_io_bytes{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\", v8_window=\"last5min\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 35,
+      "type": "timeseries",
+      "title": "Память вызовов",
+      "description": "Разность выделенной и освобожденной памяти вызовов; бывает отрицательной",
+      "datasource": { "type": "prometheus", "uid": "${ds_prometheus}" },
+      "gridPos": { "x": 16, "y": 71, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{v8_cluster_name}} / {{v8_infobase_name}}",
+          "expr": "sum by (v8_cluster_name, v8_infobase_name) (v8_cluster_sessions_memory_delta_bytes{service_name=~\"$service\", v8_cluster_name=~\"$cluster\", v8_infobase_name=~\"$infobase\", v8_window=\"last5min\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 40,
+      "type": "row",
+      "title": "Тяжелые сеансы",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 79, "w": 24, "h": 1 },
+      "panels": []
+    },
+    {
+      "id": 41,
+      "type": "bargauge",
+      "title": "Процессорное время сеансов за 5 минут",
+      "description": "Из снимков сеансов в Loki: наибольшее значение за последние 5 минут выбранного периода",
+      "datasource": { "type": "loki", "uid": "${ds_loki}" },
+      "gridPos": { "x": 0, "y": 80, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "legendFormat": "{{v8_infobase_name}} / {{session_id}} {{user_name}}",
+          "expr": "topk(10, max by (v8_infobase_name, session_id, user_name) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_cpu_time_last5min [5m])))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "displayName": "${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
+          "color": { "mode": "continuous-GrYlRd" }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "session_id" }, "properties": [ { "id": "unit", "value": "none" } ] }
+        ]
+      },
+      "options": {
+        "reduceOptions": { "values": true, "calcs": [], "limit": 10 },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "sizing": "manual",
+        "maxVizHeight": 24,
+        "minVizHeight": 16
+      },
+      "transformations": [
+        { "id": "sortBy", "options": { "sort": [ { "field": "Value #A", "desc": true } ] } }
+      ]
+    },
+    {
+      "id": 42,
+      "type": "bargauge",
+      "title": "Память сеансов за 5 минут",
+      "description": "Из снимков сеансов в Loki: наибольшее значение за последние 5 минут выбранного периода",
+      "datasource": { "type": "loki", "uid": "${ds_loki}" },
+      "gridPos": { "x": 12, "y": 80, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "legendFormat": "{{v8_infobase_name}} / {{session_id}} {{user_name}}",
+          "expr": "topk(10, max by (v8_infobase_name, session_id, user_name) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_memory_last5min [5m])))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "displayName": "${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
+          "color": { "mode": "continuous-GrYlRd" }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "session_id" }, "properties": [ { "id": "unit", "value": "none" } ] }
+        ]
+      },
+      "options": {
+        "reduceOptions": { "values": true, "calcs": [], "limit": 10 },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "sizing": "manual",
+        "maxVizHeight": 24,
+        "minVizHeight": 16
+      },
+      "transformations": [
+        { "id": "sortBy", "options": { "sort": [ { "field": "Value #A", "desc": true } ] } }
+      ]
+    }
+  ]
+}

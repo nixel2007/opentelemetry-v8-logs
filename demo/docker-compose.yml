@@ -7,11 +7,13 @@
 # Конфигурация Loki заменена на loki-config.yaml: база (v8.infobase.name) - индексируемая метка.
 # Конфигурация Tempo заменена на tempo-config.yaml: спаны накопленных журналов находятся поиском
 # по своему времени, а не по времени выгрузки, и метрические запросы TraceQL разрешены за неделю.
-# Дашборд «1С: журналы» (grafana-dashboard.json) подключается при запуске Grafana.
+# Дашборды «1С: журналы» (grafana-dashboard.json) и «1С: кластер» (grafana-cluster-dashboard.json)
+# подключаются при запуске Grafana.
 
 services:
   lgtm:
-    image: grafana/otel-lgtm:0.30.0
+    image: grafana/otel-lgtm:latest
+    pull_policy: always
     ports:
       - "3000:3000"
       - "4317:4317"
@@ -21,3 +23,4 @@ services:
       - ./tempo-config.yaml:/otel-lgtm/tempo-config.yaml:ro
       - ./grafana-dashboard.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/opentelemetry-v8-logs.yaml:ro
       - ./grafana-dashboard.json:/otel-lgtm/opentelemetry-v8-logs-dashboard.json:ro
+      - ./grafana-cluster-dashboard.json:/otel-lgtm/opentelemetry-v8-logs-cluster-dashboard.json:ro
