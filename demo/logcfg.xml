@@ -14,6 +14,12 @@
             <eq property="name" value="SCALL"/>
         </event>
         <event>
+            <eq property="name" value="VRSREQUEST"/>
+        </event>
+        <event>
+            <eq property="name" value="VRSRESPONSE"/>
+        </event>
+        <event>
             <eq property="name" value="DBMSSQL"/>
         </event>
         <event>
