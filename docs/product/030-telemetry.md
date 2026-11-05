@@ -47,7 +47,8 @@ Loki делает индексируемыми метками только ат�
 | `user.name` | пользователь из свойства `Usr` |
 | `client.address` | компьютер клиента из свойства `t:computerName`; у фоновых и регламентных заданий - сам сервер |
 | `rpc.system.name`, `rpc.method` | у `CALL` и `SCALL` с `IName` и `MName`: `1c.v8` и `<IName>/<MName>`, например `IVResourceRemoteConnection/send`; своего значения `rpc.system.name` для 1С в семантических соглашениях нет |
-| `error.type` | `_OTHER` у вызова, завершившегося исключением для клиента (свойство `RetExcp`): типа исключения в событии нет |
+| `error.type` | `_OTHER` у вызова, завершившегося исключением для клиента (свойство `RetExcp`): типа исключения в событии нет; у вызова, ответившего на HTTP-запрос кодом 5xx, - код ответа |
+| `http.*`, `url.*`, `server.*`, `user_agent.original`, `v8.http.route` | у вызова, обработавшего HTTP-запрос, см. [HTTP-запросы](./telemetry.md#http-запросы) |
 | `session.id` | номер сеанса из свойства `SessionID`; настройка `otel.v8-logs.session-id.enabled` |
 | `db.system.name`, `db.namespace`, `server.address` | у событий СУБД, см. [трассы](./telemetry.md#трассы) |
 | `db.response.returned_rows` | у событий СУБД, настройка `otel.v8-logs.returned-rows.enabled`: число строк результата из свойства `Rows`. Платформа пишет `Rows` только у запросов, которые возвращают строки; у изменяющих запросов его нет, число изменённых строк - в `RowsAffected` |
@@ -316,6 +317,7 @@ f08d92f8-9eb2-4e19-9dd9-977d907cec2d
 
 | Событие | Имя | Пример |
 |---------|-----|--------|
+| `CALL`, обработавший HTTP-запрос | метод и маршрут `v8.http.route`, неизвестный метод - `HTTP`, см. [HTTP-запросы](./telemetry.md#http-запросы) | `GET /erp/hs/dt/download/{ID}` |
 | `CALL` фонового задания | `Module.Method`, если `Func=Background job` и оба поля заполнены | `CALL Jobs.Run` |
 | `CALL` с собственным `Context` | место вызова | `CALL ОбщийМодуль.Обмен.Модуль:42` |
 | `CALL`, `SCALL` | интерфейс и метод (`IName`, `MName` или `Method`), иначе `Func` | `SCALL ILogMngrData.writeLogEntryData`, `CALL Dynamic list search` |
@@ -338,7 +340,7 @@ f08d92f8-9eb2-4e19-9dd9-977d907cec2d
 
 | Событие | Спан |
 |---------|------|
-| `CALL` | вид `SERVER`; с `IName` и `MName` - `rpc.system.name` и `rpc.method`; с `RetExcp` - статус `ERROR` с описанием из `RetExcp` и `error.type` |
+| `CALL` | вид `SERVER`; с `IName` и `MName` - `rpc.system.name` и `rpc.method`; с `RetExcp` - статус `ERROR` с описанием из `RetExcp` и `error.type`; обработавший HTTP-запрос - атрибуты HTTP-сервера и статус `ERROR` при ответе 5xx |
 | `SCALL` | вид `CLIENT`; с `IName` и `MName` - `rpc.system.name` и `rpc.method` |
 | `DBMSSQL`, `DBPOSTGRS`, `DBORACLE`, `DB2`, `DBV8DBEng` | вид `CLIENT`, `db.system.name`, `db.namespace`, `server.address`, `db.response.returned_rows`; у файловой базы (`DBV8DBEng`) своего значения `db.system.name` в семантических соглашениях нет, используется `1c.v8dbeng` |
 | `EXCP` | вид `INTERNAL`, статус `ERROR` с описанием из `Descr`, событие спана `exception` |
@@ -378,6 +380,41 @@ f08d92f8-9eb2-4e19-9dd9-977d907cec2d
 поиском по своему времени не находятся; по идентификатору трассы, в том числе из записи лога в Loki,
 они открываются. В `demo/tempo-config.yaml` запас увеличен до срока хранения блоков (`336h`)
 в разделах `storage.trace.wal`, `live_store.wal` и `block_builder.wal` (Tempo 3).
+
+#### HTTP-запросы
+
+HTTP-запрос к публикации (HTTP- и веб-сервисы, OData, тонкий и веб-клиент) журнал пишет парой событий
+`VRSREQUEST` и `VRSRESPONSE`. В rphost за веб-сервером и в `ibsrv` пара записана внутри вызова
+`CALL` того же потока уровнем выше: этот вызов получает атрибуты HTTP-сервера по семантическим
+соглашениям и имя `{метод} {маршрут}`. События пары остаются своими спанами и записями лога.
+Пара без охватывающего вызова (журнал веб-сервера, файловая публикация) остается только событиями VRS.
+
+| Атрибут | Значение |
+|---------|----------|
+| `http.request.method` | метод запроса; не из списка семантических соглашений - `_OTHER`, исходный - в `http.request.method_original` |
+| `url.path`, `url.query` | путь и параметры из `URI` (секреты скрыты) |
+| `url.scheme` | схема из заголовка `1C-OriginalLocation` |
+| `server.address`, `server.port` | из заголовка `Host` |
+| `client.address` | первый адрес заголовка `X-Forwarded-For` - исходный клиент, а не веб-сервер из `t:computerName` |
+| `user_agent.original` | заголовок `User-Agent` |
+| `http.response.status_code` | `Status` из `VRSRESPONSE` |
+| `error.type` | код ответа 5xx; спан получает статус `ERROR`. Ответ 4xx ошибкой HTTP-сервера не считается |
+| `v8.http.route` | маршрут низкой кардинальности, ниже |
+
+Шаблона маршрута, который выбрала платформа, в журнале нет, поэтому `http.route` не заполняется,
+а маршрут записывается своим атрибутом `v8.http.route`: путь публикации из заголовка `1C-BaseLocation`
+и маршрут внутри нее.
+
+| Адрес | Маршрут | Пример |
+|-------|---------|--------|
+| `/hs/...` | шаблон из настройки `otel.v8-logs.http.routes`, без совпадения - `/hs/{корень}/*` | `/erp/hs/dt/download/{ID}`, `/erp/hs/mini/*` |
+| `/ws/...` | путь описания из `1C-OriginalLocation` (IIS передает в `URI` адрес, который прислал клиент) и операция из заголовка `SOAPAction` | `/vrsfile/ws/ping.1cws/Ping` |
+| `/odata/...` | имя сущности без ключа и дальнейшего пути | `/demo/odata/standard.odata/Catalog_Номенклатура` |
+| `/e1cib/...` | не больше двух сегментов после `e1cib` | `/vrsmin/e1cib/cmi/commands` |
+| `/e1csys/...` | статика клиента | `/vrsmin/e1csys/*` |
+| прочие | | `/vrsmin/*` |
+
+У вызова остаются и атрибуты `rpc.system.name` и `rpc.method`, и метрика `rpc.server.call.duration`.
 
 ## Журнал регистрации
 
