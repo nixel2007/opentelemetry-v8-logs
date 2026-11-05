@@ -411,7 +411,7 @@ HTTP-запрос к публикации (HTTP- и веб-сервисы, OData
 | `/ws/...` | путь описания из `1C-OriginalLocation` (IIS передает в `URI` адрес, который прислал клиент) и операция из заголовка `SOAPAction` | `/vrsfile/ws/ping.1cws/Ping` |
 | `/odata/...` | имя сущности без ключа и дальнейшего пути | `/demo/odata/standard.odata/Catalog_Номенклатура` |
 | `/e1cib/...` | не больше двух сегментов после `e1cib` | `/vrsmin/e1cib/cmi/commands` |
-| `/e1csys/...` | статика клиента | `/vrsmin/e1csys/*` |
+| `/e1csys/...` | статика клиента: группа ресурсов платформы без имени файла | `/vrsmin/e1csys/basic/*` |
 | прочие | | `/vrsmin/*` |
 
 У вызова остаются и атрибуты `rpc.system.name` и `rpc.method`, и метрика `rpc.server.call.duration`.
