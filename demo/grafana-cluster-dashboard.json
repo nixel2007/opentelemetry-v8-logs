@@ -744,15 +744,15 @@
         {
           "refId": "A",
           "queryType": "instant",
-          "legendFormat": "{{v8_infobase_name}} / {{session_id}} {{user_name}}",
-          "expr": "topk(10, max by (v8_infobase_name, session_id, user_name) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_cpu_time_last5min [5m])))"
+          "legendFormat": "{{service_name}} / {{v8_infobase_name}} / {{session_id}} {{user_name}}",
+          "expr": "topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_cpu_time_last5min [5m])))"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
           "min": 0,
-          "displayName": "${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
+          "displayName": "${__data.fields.service_name} / ${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
           "color": { "mode": "continuous-GrYlRd" }
         },
         "overrides": [
@@ -783,15 +783,15 @@
         {
           "refId": "A",
           "queryType": "instant",
-          "legendFormat": "{{v8_infobase_name}} / {{session_id}} {{user_name}}",
-          "expr": "topk(10, max by (v8_infobase_name, session_id, user_name) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_memory_last5min [5m])))"
+          "legendFormat": "{{service_name}} / {{v8_infobase_name}} / {{session_id}} {{user_name}}",
+          "expr": "topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_memory_last5min [5m])))"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
           "min": 0,
-          "displayName": "${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
+          "displayName": "${__data.fields.service_name} / ${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
           "color": { "mode": "continuous-GrYlRd" }
         },
         "overrides": [

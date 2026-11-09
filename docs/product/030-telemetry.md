@@ -605,7 +605,7 @@ HTTP-запрос к публикации (HTTP- и веб-сервисы, OData
 # память сеанса 1022 базы erp
 max_over_time({service_name="<сервис>", v8_infobase_name="erp"} | scope_name="opentelemetry-v8-logs.cluster" | session_id="1022" | unwrap v8_session_memory_current [5m])
 # 10 сеансов с наибольшей памятью
-topk(10, max by (v8_infobase_name, session_id, user_name) (max_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | unwrap v8_session_memory_current [5m])))
+topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (max_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | unwrap v8_session_memory_current [5m])))
 # сеансы, которые держат соединение с СУБД по последнему снимку
 topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (last_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | keep service_name, v8_cluster_name, v8_infobase_name, session_id, user_name, v8_session_dbms_captured_duration | unwrap v8_session_dbms_captured_duration [1m])) > 0)
 ```
