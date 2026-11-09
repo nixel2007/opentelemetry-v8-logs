@@ -248,6 +248,9 @@
 	Поля.Вставить("Спящий", Истина);
 	Поля.Вставить("БлокированоСУБД", 1);
 	Поля.Вставить("БлокированоБлокировками", 2);
+	Поля.Вставить("ЗахваченоСУБДМс", 1500);
+	Поля.Вставить("ЗахваченоСУБДВ", Дата(2026, 10, 24, 9, 59, 58));
+	Поля.Вставить("ЗахваченоСУБД", "dbpid=79");
 	ДополнитьТройкой(Поля, "ПамятьТекущая, ПамятьЗа5Минут, ПамятьВсего", 100);
 	ДополнитьТройкой(Поля, "ЧтениеТекущее, ЧтениеЗа5Минут, ЧтениеВсего", 200);
 	ДополнитьТройкой(Поля, "ЗаписьТекущая, ЗаписьЗа5Минут, ЗаписьВсего", 300);
@@ -282,6 +285,9 @@
 	Ожидаемые.Вставить("v8.session.hibernated", Истина);
 	Ожидаемые.Вставить("v8.session.blocked.db", 1);
 	Ожидаемые.Вставить("v8.session.blocked.lock", 2);
+	Ожидаемые.Вставить("v8.session.dbms_captured.duration", 1500);
+	Ожидаемые.Вставить("v8.session.dbms_captured.at", "2026-10-24T09:59:58");
+	Ожидаемые.Вставить("v8.session.dbms_captured.info", "dbpid=79");
 	ВставитьТройку(Ожидаемые, "v8.session.memory", "current, last5min, total", 100);
 	ВставитьТройку(Ожидаемые, "v8.session.read", "current, last5min, total", 200);
 	ВставитьТройку(Ожидаемые, "v8.session.write", "current, last5min, total", 300);
@@ -314,12 +320,14 @@
 	АтрибутыСеанса = Снимок.Сеансы[0].Атрибуты;
 	Для Каждого Ключ Из СтрРазделить("v8.infobase.name, v8.session.app_id, user.name, host.name, process.pid,
 		|client.address, v8.session.client.ip, v8.session.started_at, v8.session.last_active_at,
-		|v8.session.current_service, v8.session.data_separation, v8.session.license.series", ", " + Символы.ПС, Ложь) Цикл
+		|v8.session.current_service, v8.session.data_separation, v8.session.license.series,
+		|v8.session.dbms_captured.at, v8.session.dbms_captured.info", ", " + Символы.ПС, Ложь) Цикл
 		Ожидаем.Что(АтрибутыСеанса[Ключ], Ключ).Равно(Неопределено);
 	КонецЦикла;
 	Ожидаем.Что(АтрибутыСеанса["v8.cluster.name"]).Равно("Главный");
 	Ожидаем.Что(АтрибутыСеанса["session.id"]).Равно(0);
 	Ожидаем.Что(АтрибутыСеанса["v8.session.memory.current"]).Равно(0);
+	Ожидаем.Что(АтрибутыСеанса["v8.session.dbms_captured.duration"]).Равно(0);
 	Ожидаем.Что(АтрибутыСеанса["v8.session.hibernated"]).Равно(Ложь);
 
 КонецПроцедуры

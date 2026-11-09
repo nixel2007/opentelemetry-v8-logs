@@ -810,6 +810,45 @@
       "transformations": [
         { "id": "sortBy", "options": { "sort": [ { "field": "Value #A", "desc": true } ] } }
       ]
+    },
+    {
+      "id": 43,
+      "type": "bargauge",
+      "title": "Захвачено СУБД сейчас",
+      "description": "Из снимков сеансов в Loki: сколько сеанс держит соединение с СУБД, по последнему снимку за минуту; сеансы без захваченного соединения не показываются. Если опрос кластера реже раза в минуту, окно [1m] в запросе нужно увеличить",
+      "datasource": { "type": "loki", "uid": "${ds_loki}" },
+      "gridPos": { "x": 0, "y": 89, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "instant",
+          "legendFormat": "{{v8_infobase_name}} / {{session_id}} {{user_name}}",
+          "expr": "topk(10, max by (v8_infobase_name, session_id, user_name) (last_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | keep v8_infobase_name, session_id, user_name, v8_session_dbms_captured_duration | unwrap v8_session_dbms_captured_duration [1m])) > 0)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "displayName": "${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
+          "color": { "mode": "continuous-GrYlRd" }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "session_id" }, "properties": [ { "id": "unit", "value": "none" } ] }
+        ]
+      },
+      "options": {
+        "reduceOptions": { "values": true, "calcs": [], "limit": 10 },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "sizing": "manual",
+        "maxVizHeight": 24,
+        "minVizHeight": 16
+      },
+      "transformations": [
+        { "id": "sortBy", "options": { "sort": [ { "field": "Value #A", "desc": true } ] } }
+      ]
     }
   ]
 }
