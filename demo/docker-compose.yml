@@ -9,6 +9,8 @@
 # по своему времени, а не по времени выгрузки, и метрические запросы TraceQL разрешены за неделю.
 # Дашборды «1С: журналы» (grafana-dashboard.json) и «1С: кластер» (grafana-cluster-dashboard.json)
 # подключаются при запуске Grafana.
+# Данные Loki, Tempo, Prometheus и Grafana хранятся в томе lgtm-data и переживают пересоздание
+# контейнера (новый образ при up, down и up). Удалить их: docker compose -f demo/docker-compose.yml down -v.
 
 services:
   lgtm:
@@ -24,3 +26,7 @@ services:
       - ./grafana-dashboard.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/opentelemetry-v8-logs.yaml:ro
       - ./grafana-dashboard.json:/otel-lgtm/opentelemetry-v8-logs-dashboard.json:ro
       - ./grafana-cluster-dashboard.json:/otel-lgtm/opentelemetry-v8-logs-cluster-dashboard.json:ro
+      - lgtm-data:/data
+
+volumes:
+  lgtm-data:

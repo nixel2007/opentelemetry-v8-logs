@@ -73,6 +73,12 @@ opentelemetry-v8-logs --help
 - `autumn-properties.json` - пример настроек приложения;
 - `logcfg.xml` - пример настройки технологического журнала с событиями для трасс.
 
+Данные стека (логи, трассы, метрики, настройки Grafana) хранятся в томе `lgtm-data` и не теряются,
+когда контейнер пересоздается, в том числе при обновлении образа. Удалить их вместе со стеком:
+`docker compose -f demo/docker-compose.yml down -v`. Обновленные дашборды из репозитория Grafana
+загружает при перезапуске: `docker compose -f demo/docker-compose.yml restart lgtm`. Файлы дашбордов
+смонтированы по отдельности, и замененный файл контейнер видит только после перезапуска.
+
 ```sh
 docker compose -f demo/docker-compose.yml up -d
 cp demo/autumn-properties.json .   # укажите свои каталоги журналов
