@@ -106,41 +106,6 @@ Loki по умолчанию отбрасывает записи старше н
 разрешите старые записи в Loki, как в `demo/loki-config.yaml`, или пропустите их настройкой
 `start-from-end`.
 
-### Перенос данных стека, запущенного без тома
-
-В прежних версиях `demo/docker-compose.yml` данные хранились в самом контейнере. Новая версия
-пересоздает контейнер, и старый удаляется вместе с данными, поэтому скопируйте `/data` до первого
-`up` или `create` с новым файлом:
-
-```sh
-# 1. Остановить старый контейнер, чтобы копия была целостной
-docker compose -f demo/docker-compose.yml stop lgtm
-
-# 2. Скопировать данные из старого контейнера во временный каталог
-docker cp $(docker compose -f demo/docker-compose.yml ps -aq lgtm):/data ./lgtm-data-backup
-
-# 3. Получить новую версию docker-compose.yml с томом
-git pull
-
-# 4. Создать новый контейнер с томом, не запуская его; старый контейнер удаляется
-docker compose -f demo/docker-compose.yml create
-
-# 5. Скопировать данные в том нового контейнера
-docker cp ./lgtm-data-backup/. $(docker compose -f demo/docker-compose.yml ps -aq lgtm):/data
-
-# 6. Запустить
-docker compose -f demo/docker-compose.yml start
-
-# 7. Когда данные проверены, удалить копию
-rm -rf ./lgtm-data-backup
-```
-
-Точка в `lgtm-data-backup/.` нужна, чтобы скопировать содержимое каталога, а не сам каталог внутрь `/data`.
-Временной копии нужно столько же места, сколько занимает `/data`:
-`docker exec $(docker compose -f demo/docker-compose.yml ps -q lgtm) du -sh /data` (до шага 1).
-Из-за `pull_policy: always` шаг 4 скачивает новый образ, и перенесенные данные запускаются
-на новых версиях Loki, Tempo, Prometheus и Grafana.
-
 ## Производительность
 
 Протокол `http/protobuf` SDK для OneScript сейчас кодирует данные заметно медленнее, чем
