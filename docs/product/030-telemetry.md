@@ -48,7 +48,7 @@ Loki делает индексируемыми метками только ат�
 | `client.address` | компьютер клиента из свойства `t:computerName`; у фоновых и регламентных заданий - сам сервер |
 | `rpc.system.name`, `rpc.method` | у `CALL` и `SCALL` с `IName` и `MName`: `1c.v8` и `<IName>/<MName>`, например `IVResourceRemoteConnection/send`; своего значения `rpc.system.name` для 1С в семантических соглашениях нет |
 | `error.type` | `_OTHER` у вызова, завершившегося исключением для клиента (свойство `RetExcp`): типа исключения в событии нет; у вызова, ответившего на HTTP-запрос кодом 5xx, - код ответа |
-| `http.*`, `url.*`, `server.*`, `user_agent.original`, `v8.http.route` | у вызова, обработавшего HTTP-запрос, см. [HTTP-запросы](./telemetry.md#http-запросы) |
+| `http.*`, `url.*`, `server.*`, `user_agent.original` | у вызова, обработавшего HTTP-запрос, см. [HTTP-запросы](./telemetry.md#http-запросы) |
 | `v8.trace.detached_trace_id` | у вызова, продолжившего внешнюю трассу из заголовков запроса: прежняя трасса, в которой остались спаны, отправленные до запроса, см. [HTTP-запросы](./telemetry.md#http-запросы) |
 | `session.id` | номер сеанса из свойства `SessionID`; настройка `otel.v8-logs.session-id.enabled` |
 | `db.system.name`, `db.namespace`, `server.address` | у событий СУБД, см. [трассы](./telemetry.md#трассы) |
@@ -318,7 +318,7 @@ f08d92f8-9eb2-4e19-9dd9-977d907cec2d
 
 | Событие | Имя | Пример |
 |---------|-----|--------|
-| `CALL`, обработавший HTTP-запрос | метод и маршрут `v8.http.route`, неизвестный метод - `HTTP`, см. [HTTP-запросы](./telemetry.md#http-запросы) | `GET /erp/hs/dt/download/{ID}` |
+| `CALL`, обработавший HTTP-запрос | метод и маршрут `http.route`, неизвестный метод - `HTTP`, см. [HTTP-запросы](./telemetry.md#http-запросы) | `GET /erp/hs/dt/download/{ID}` |
 | `CALL` фонового задания | `Module.Method`, если `Func=Background job` и оба поля заполнены | `CALL Jobs.Run` |
 | `CALL` с собственным `Context` | место вызова | `CALL ОбщийМодуль.Обмен.Модуль:42` |
 | `CALL`, `SCALL` | интерфейс и метод (`IName`, `MName` или `Method`), иначе `Func` | `SCALL ILogMngrData.writeLogEntryData`, `CALL Dynamic list search` |
@@ -400,11 +400,13 @@ HTTP-запрос к публикации (HTTP- и веб-сервисы, OData
 | `user_agent.original` | заголовок `User-Agent` |
 | `http.response.status_code` | `Status` из `VRSRESPONSE` |
 | `error.type` | код ответа 5xx; спан получает статус `ERROR`. Ответ 4xx ошибкой HTTP-сервера не считается |
-| `v8.http.route` | маршрут низкой кардинальности, ниже |
+| `http.route` | маршрут низкой кардинальности, ниже |
 
-Шаблона маршрута, который выбрала платформа, в журнале нет, поэтому `http.route` не заполняется,
-а маршрут записывается своим атрибутом `v8.http.route`: путь публикации из заголовка `1C-BaseLocation`
-и маршрут внутри нее.
+Шаблона маршрута, который выбрала платформа, в журнале нет, поэтому маршрут `http.route`
+восстанавливается по адресу и заголовкам запроса: путь публикации из заголовка `1C-BaseLocation`
+и маршрут внутри нее. Как и маппинг сервлета в инструментациях Java (`/path/*`), маршрут может быть
+грубее шаблона метода: точнее всего он у HTTP-сервисов с шаблонами из настройки
+`otel.v8-logs.http.routes`. Шаблоны настройки должны совпадать с шаблонами URL в конфигурации базы.
 
 | Адрес | Маршрут | Пример |
 |-------|---------|--------|
