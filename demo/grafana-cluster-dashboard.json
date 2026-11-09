@@ -739,20 +739,20 @@
       "title": "Процессорное время сеансов за 5 минут",
       "description": "Из снимков сеансов в Loki: наибольшее значение за последние 5 минут выбранного периода",
       "datasource": { "type": "loki", "uid": "${ds_loki}" },
-      "gridPos": { "x": 0, "y": 80, "w": 12, "h": 9 },
+      "gridPos": { "x": 0, "y": 80, "w": 12, "h": 13 },
       "targets": [
         {
           "refId": "A",
           "queryType": "instant",
-          "legendFormat": "{{service_name}} / {{v8_infobase_name}} / {{session_id}} {{user_name}}",
-          "expr": "topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_cpu_time_last5min [5m])))"
+          "legendFormat": "{{service_name}} / {{v8_infobase_name}} / {{session_id}} {{user_name}} {{v8_session_app_id}}",
+          "expr": "topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name, v8_session_app_id) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_cpu_time_last5min [5m])))"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
           "min": 0,
-          "displayName": "${__data.fields.service_name} / ${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
+          "displayName": "${__data.fields.service_name} / ${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name} (${__data.fields.v8_session_app_id})",
           "color": { "mode": "continuous-GrYlRd" }
         },
         "overrides": [
@@ -765,8 +765,9 @@
         "displayMode": "gradient",
         "showUnfilled": true,
         "sizing": "manual",
-        "maxVizHeight": 24,
-        "minVizHeight": 16
+        "maxVizHeight": 36,
+        "minVizHeight": 28,
+        "namePlacement": "top"
       },
       "transformations": [
         { "id": "sortBy", "options": { "sort": [ { "field": "Value #A", "desc": true } ] } }
@@ -778,20 +779,20 @@
       "title": "Память сеансов за 5 минут",
       "description": "Из снимков сеансов в Loki: наибольшее значение за последние 5 минут выбранного периода",
       "datasource": { "type": "loki", "uid": "${ds_loki}" },
-      "gridPos": { "x": 12, "y": 80, "w": 12, "h": 9 },
+      "gridPos": { "x": 12, "y": 80, "w": 12, "h": 13 },
       "targets": [
         {
           "refId": "A",
           "queryType": "instant",
-          "legendFormat": "{{service_name}} / {{v8_infobase_name}} / {{session_id}} {{user_name}}",
-          "expr": "topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_memory_last5min [5m])))"
+          "legendFormat": "{{service_name}} / {{v8_infobase_name}} / {{session_id}} {{user_name}} {{v8_session_app_id}}",
+          "expr": "topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name, v8_session_app_id) (max_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | unwrap v8_session_memory_last5min [5m])))"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
           "min": 0,
-          "displayName": "${__data.fields.service_name} / ${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
+          "displayName": "${__data.fields.service_name} / ${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name} (${__data.fields.v8_session_app_id})",
           "color": { "mode": "continuous-GrYlRd" }
         },
         "overrides": [
@@ -804,8 +805,9 @@
         "displayMode": "gradient",
         "showUnfilled": true,
         "sizing": "manual",
-        "maxVizHeight": 24,
-        "minVizHeight": 16
+        "maxVizHeight": 36,
+        "minVizHeight": 28,
+        "namePlacement": "top"
       },
       "transformations": [
         { "id": "sortBy", "options": { "sort": [ { "field": "Value #A", "desc": true } ] } }
@@ -817,20 +819,20 @@
       "title": "Захвачено СУБД сейчас",
       "description": "Из снимков сеансов в Loki: сколько сеанс держит соединение с СУБД, по последнему снимку за минуту; сеансы без захваченного соединения не показываются. Завершенный сеанс снимков больше не дает и остается с последним значением до минуты. Если опрос кластера реже раза в минуту, окно [1m] в запросе нужно увеличить",
       "datasource": { "type": "loki", "uid": "${ds_loki}" },
-      "gridPos": { "x": 0, "y": 89, "w": 12, "h": 9 },
+      "gridPos": { "x": 0, "y": 93, "w": 12, "h": 13 },
       "targets": [
         {
           "refId": "A",
           "queryType": "instant",
-          "legendFormat": "{{service_name}} / {{v8_infobase_name}} / {{session_id}} {{user_name}}",
-          "expr": "topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (last_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | keep service_name, v8_cluster_name, v8_infobase_name, session_id, user_name, v8_session_dbms_captured_duration | unwrap v8_session_dbms_captured_duration [1m])) > 0)"
+          "legendFormat": "{{service_name}} / {{v8_infobase_name}} / {{session_id}} {{user_name}} {{v8_session_app_id}}",
+          "expr": "topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name, v8_session_app_id) (last_over_time({service_name=~\"$service\", v8_infobase_name=~\"$infobase\"} | scope_name=\"opentelemetry-v8-logs.cluster\" | v8_cluster_name=~\"$cluster\" | keep service_name, v8_cluster_name, v8_infobase_name, session_id, user_name, v8_session_app_id, v8_session_dbms_captured_duration | unwrap v8_session_dbms_captured_duration [1m])) > 0)"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
           "min": 0,
-          "displayName": "${__data.fields.service_name} / ${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name}",
+          "displayName": "${__data.fields.service_name} / ${__data.fields.v8_infobase_name} / сеанс ${__data.fields.session_id} ${__data.fields.user_name} (${__data.fields.v8_session_app_id})",
           "color": { "mode": "continuous-GrYlRd" }
         },
         "overrides": [
@@ -843,8 +845,9 @@
         "displayMode": "gradient",
         "showUnfilled": true,
         "sizing": "manual",
-        "maxVizHeight": 24,
-        "minVizHeight": 16
+        "maxVizHeight": 36,
+        "minVizHeight": 28,
+        "namePlacement": "top"
       },
       "transformations": [
         { "id": "sortBy", "options": { "sort": [ { "field": "Value #A", "desc": true } ] } }
