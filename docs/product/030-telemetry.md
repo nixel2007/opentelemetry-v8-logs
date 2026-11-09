@@ -256,6 +256,7 @@ f08d92f8-9eb2-4e19-9dd9-977d907cec2d
 | `db.client.operation.duration`, с | гистограмма | `db.system.name`, `db.namespace`, `server.address` |
 | `rpc.server.call.duration`, с | гистограмма | `rpc.system.name`, `rpc.method`, `error.type` |
 | `rpc.client.call.duration`, с | гистограмма | `rpc.system.name`, `rpc.method`, `error.type` |
+| `http.server.request.duration`, с | гистограмма | `http.request.method`, `url.scheme`, `http.response.status_code`, `http.route`, `error.type` |
 
 `v8.techlog.truncated` - число обрезанных значений, `v8.techlog.truncated.size` - отрезанные байты,
 см. [ограничение размеров](./telemetry.md#ограничение-размеров). `v8.techlog.truncation.target` - `body`
@@ -268,6 +269,11 @@ f08d92f8-9eb2-4e19-9dd9-977d907cec2d
 `rpc.server.call.duration` и `rpc.client.call.duration` - метрики семантических соглашений RPC
 (статус release candidate): длительность входящих (`CALL`) и исходящих (`SCALL`) вызовов метода
 интерфейса платформы, то есть событий с `IName` и `MName`, с границами бакетов из семантических соглашений.
+
+`http.server.request.duration` - метрика семантических соглашений HTTP: длительность вызова (`CALL`),
+обработавшего HTTP-запрос, то есть длительность HTTP-спана, см. [HTTP-запросы](./telemetry.md#http-запросы).
+Границы бакетов - из семантических соглашений. `server.address` и `server.port` в метрику не попадают:
+они берутся из заголовка `Host`, и по семантическим соглашениям их включают только по выбору из-за кардинальности.
 
 ### Трассы
 
@@ -417,7 +423,8 @@ HTTP-запрос к публикации (HTTP- и веб-сервисы, OData
 | `/e1csys/...` | статика клиента: группа ресурсов платформы без имени файла | `/vrsmin/e1csys/basic/*` |
 | прочие | | `/vrsmin/*` |
 
-У вызова остаются и атрибуты `rpc.system.name` и `rpc.method`, и метрика `rpc.server.call.duration`.
+Длительность такого вызова попадает в метрику `http.server.request.duration`. У вызова остаются и атрибуты
+`rpc.system.name` и `rpc.method`, и метрика `rpc.server.call.duration`.
 
 Если в заголовках `VRSREQUEST` есть контекст вызывающей стороны (веб-сервер передает заголовки
 клиента без изменений), трасса вызова продолжает внешнюю: ее спаны получают внешний `trace_id`,
