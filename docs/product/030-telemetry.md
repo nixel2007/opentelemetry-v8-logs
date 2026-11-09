@@ -524,7 +524,7 @@ HTTP-запрос к публикации (HTTP- и веб-сервисы, OData
 | `v8.cluster.sessions.io` | `By` | чтение и запись с диска вызовами сеансов | разрез сеансов, `v8.io.direction`: `read`, `write`, и `v8.window` |
 | `v8.cluster.sessions.long_calls` | `{session}` | число сеансов, текущий вызов которых длится не меньше порога | разрез сеансов и `v8.duration.threshold` - порог в секундах (число); точка на каждый порог, в том числе нулевая |
 | `v8.cluster.infobase.scheduled_jobs_denied` | - | 1 - регламентные задания базы заблокированы, 0 - нет | `v8.cluster.name`, `v8.infobase.name`; только для баз, учетные данные которых заданы в настройках |
-| `v8.cluster.infobase.sessions_denied` | - | 1 - начало сеансов базы заблокировано, 0 - нет | те же |
+| `v8.cluster.infobase.sessions_denied` | - | 1 - начало сеансов базы заблокировано, 0 - нет: блокировка включена, и время серверов кластера (настройка `timezone` кластера) внутри ее интервала; пустое начало или конец интервал не ограничивают | те же |
 | `v8.cluster.connections` | `{connection}` | число соединений | `v8.cluster.name`, `v8.infobase.name`, `host.name`, `process.pid`, `v8.connection.app_id` (приложение соединения) |
 | `v8.cluster.processes` | `{process}` | число рабочих процессов | `v8.cluster.name`, `host.name`, `v8.process.running`, `v8.process.enabled` (булевы) |
 | `v8.cluster.process.memory.usage` | `By` | память рабочего процесса | `v8.cluster.name`, `host.name`, `process.pid` |
