@@ -49,7 +49,7 @@ title: Экспорт журналов 1С в OpenTelemetry
 ```sh
 opm install opentelemetry-v8-logs
 opentelemetry-v8-logs              # постоянная работа (то же, что run)
-opentelemetry-v8-logs run --once   # один проход, например из планировщика
+opentelemetry-v8-logs run --once   # один проход и опрос кластеров без фоновых заданий, например из планировщика
 opentelemetry-v8-logs --help
 ```
 
