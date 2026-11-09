@@ -607,12 +607,16 @@ max_over_time({service_name="<сервис>", v8_infobase_name="erp"} | scope_na
 # 10 сеансов с наибольшей памятью
 topk(10, max by (v8_infobase_name, session_id, user_name) (max_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | unwrap v8_session_memory_current [5m])))
 # сеансы, которые держат соединение с СУБД по последнему снимку
-topk(10, max by (v8_infobase_name, session_id, user_name) (last_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | keep v8_infobase_name, session_id, user_name, v8_session_dbms_captured_duration | unwrap v8_session_dbms_captured_duration [1m])) > 0)
+topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (last_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | keep service_name, v8_cluster_name, v8_infobase_name, session_id, user_name, v8_session_dbms_captured_duration | unwrap v8_session_dbms_captured_duration [1m])) > 0)
 ```
 
 Для последнего значения сеанса нужен `keep`: остальные метаданные снимка (память, чтение и другие) меняются
 от опроса к опросу, и без `keep` каждый снимок становится отдельным рядом, а `last_over_time` по ним дает
-наибольшее значение окна, а не последнее. Окно запроса должно быть не меньше интервала опроса кластера.
+наибольшее значение окна, а не последнее. `keep` убирает и метки потока, поэтому сервис и кластер в нем
+перечислены явно: иначе сеансы с одинаковыми базой, номером и пользователем из разных кластеров
+(у разных серверов `ras` кластер часто называется одинаково) сливаются в один ряд. Окно запроса должно быть
+не меньше интервала опроса кластера. Завершенный сеанс снимков больше не дает, и его последнее значение
+остается в результате до конца окна.
 
 ### Связь с трассами технологического журнала
 
