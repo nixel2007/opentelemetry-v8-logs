@@ -524,7 +524,7 @@ HTTP-запрос к публикации (HTTP- и веб-сервисы, OData
 | `v8.cluster.sessions.io` | `By` | чтение и запись с диска вызовами сеансов | разрез сеансов, `v8.io.direction`: `read`, `write`, и `v8.window` |
 | `v8.cluster.sessions.long_calls` | `{session}` | число сеансов, текущий вызов которых длится не меньше порога | разрез сеансов и `v8.duration.threshold` - порог в секундах (число); точка на каждый порог, в том числе нулевая |
 | `v8.cluster.infobase.scheduled_jobs_denied` | - | 1 - регламентные задания базы заблокированы, 0 - нет | `v8.cluster.name`, `v8.infobase.name`; только для баз, учетные данные которых заданы в настройках |
-| `v8.cluster.infobase.sessions_denied` | - | 1 - начало сеансов базы заблокировано, 0 - нет | те же |
+| `v8.cluster.infobase.sessions_denied` | - | 1 - начало сеансов базы заблокировано, 0 - нет: блокировка включена, и время серверов кластера (настройка `timezone` кластера) внутри ее интервала; пустое начало или конец интервал не ограничивают | те же |
 | `v8.cluster.connections` | `{connection}` | число соединений | `v8.cluster.name`, `v8.infobase.name`, `host.name`, `process.pid`, `v8.connection.app_id` (приложение соединения) |
 | `v8.cluster.processes` | `{process}` | число рабочих процессов | `v8.cluster.name`, `host.name`, `v8.process.running`, `v8.process.enabled` (булевы) |
 | `v8.cluster.process.memory.usage` | `By` | память рабочего процесса | `v8.cluster.name`, `host.name`, `process.pid` |
@@ -583,6 +583,8 @@ HTTP-запрос к публикации (HTTP- и веб-сервисы, OData
 | `v8.session.started_at`, `v8.session.last_active_at` | начало и последняя активность, `yyyy-MM-ddTHH:mm:ss` |
 | `v8.session.hibernated` | сеанс спит (булево) |
 | `v8.session.blocked.db`, `v8.session.blocked.lock` | номер сеанса, который блокирует этот сеанс: в СУБД и управляемой блокировкой; 0 - не заблокирован |
+| `v8.session.dbms_captured.duration` | сколько сеанс держит соединение с СУБД («Захвачено СУБД» в консоли кластера), мс; 0 - соединение не захвачено |
+| `v8.session.dbms_captured.at`, `v8.session.dbms_captured.info` | когда соединение с СУБД захвачено, `yyyy-MM-ddTHH:mm:ss`, и сведения о нем из RAS (`db_proc_info`) |
 | `v8.session.memory.current`, `.last5min`, `.total` | память, байты: текущий вызов, за 5 минут, с начала сеанса |
 | `v8.session.read.current`, `.last5min`, `.total` | чтение, байты |
 | `v8.session.write.current`, `.last5min`, `.total` | запись, байты |
@@ -603,8 +605,18 @@ HTTP-запрос к публикации (HTTP- и веб-сервисы, OData
 # память сеанса 1022 базы erp
 max_over_time({service_name="<сервис>", v8_infobase_name="erp"} | scope_name="opentelemetry-v8-logs.cluster" | session_id="1022" | unwrap v8_session_memory_current [5m])
 # 10 сеансов с наибольшей памятью
-topk(10, max by (v8_infobase_name, session_id, user_name) (max_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | unwrap v8_session_memory_current [5m])))
+topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (max_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | unwrap v8_session_memory_current [5m])))
+# сеансы, которые держат соединение с СУБД по последнему снимку
+topk(10, max by (service_name, v8_cluster_name, v8_infobase_name, session_id, user_name) (last_over_time({service_name="<сервис>"} | scope_name="opentelemetry-v8-logs.cluster" | keep service_name, v8_cluster_name, v8_infobase_name, session_id, user_name, v8_session_dbms_captured_duration | unwrap v8_session_dbms_captured_duration [1m])) > 0)
 ```
+
+Для последнего значения сеанса нужен `keep`: остальные метаданные снимка (память, чтение и другие) меняются
+от опроса к опросу, и без `keep` каждый снимок становится отдельным рядом, а `last_over_time` по ним дает
+наибольшее значение окна, а не последнее. `keep` убирает и метки потока, поэтому сервис и кластер в нем
+перечислены явно: иначе сеансы с одинаковыми базой, номером и пользователем из разных кластеров
+(у разных серверов `ras` кластер часто называется одинаково) сливаются в один ряд. Окно запроса должно быть
+не меньше интервала опроса кластера. Завершенный сеанс снимков больше не дает, и его последнее значение
+остается в результате до конца окна.
 
 ### Связь с трассами технологического журнала
 

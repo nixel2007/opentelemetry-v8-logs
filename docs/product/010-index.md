@@ -49,7 +49,7 @@ title: Экспорт журналов 1С в OpenTelemetry
 ```sh
 opm install opentelemetry-v8-logs
 opentelemetry-v8-logs              # постоянная работа (то же, что run)
-opentelemetry-v8-logs run --once   # один проход, например из планировщика
+opentelemetry-v8-logs run --once   # один проход и опрос кластеров без фоновых заданий, например из планировщика
 opentelemetry-v8-logs --help
 ```
 
@@ -72,6 +72,12 @@ opentelemetry-v8-logs --help
   подключается при запуске стека;
 - `autumn-properties.json` - пример настроек приложения;
 - `logcfg.xml` - пример настройки технологического журнала с событиями для трасс.
+
+Данные стека (логи, трассы, метрики, настройки Grafana) хранятся в томе `lgtm-data` и не теряются,
+когда контейнер пересоздается, в том числе при обновлении образа. Удалить их вместе со стеком:
+`docker compose -f demo/docker-compose.yml down -v`. Обновленные дашборды из репозитория Grafana
+загружает при перезапуске: `docker compose -f demo/docker-compose.yml restart lgtm`. Файлы дашбордов
+смонтированы по отдельности, и замененный файл контейнер видит только после перезапуска.
 
 ```sh
 docker compose -f demo/docker-compose.yml up -d
